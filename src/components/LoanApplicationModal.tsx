@@ -344,54 +344,61 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
   const startPolling = (reference: string, liveGateway: boolean = true) => {
     let attempts = 0;
     const maxAttempts = liveGateway ? 30 : 6;
-
-    const finishSuccess = (ref: string) => {
-      clearInterval(interval);
-      setFeeMpesaRef(ref);
-      setDisbursementMpesaRef(`QKH${Math.floor(10000000 + Math.random() * 90000000)}B`);
-      setStkPushStep('completed');
-      setErrorMessage('');
-      try {
-        confetti({
-          particleCount: 140,
-          spread: 90,
-          origin: { y: 0.5 }
-        });
-      } catch (err) {
-        // Safe fallback
-      }
-    };
-
-    const finishError = (message: string) => {
-      clearInterval(interval);
-      setErrorMessage(message);
-      setStkPushStep('ready');
-    };
-
-    if (!liveGateway) {
-      setTimeout(() => {
-        finishSuccess(reference);
-      }, 2500);
-      return;
-    }
-
-    const interval = setInterval(async () => {
+    const interval = liveGateway ? setInterval(async () => {
       attempts++;
       try {
         const statusRes = await checkUpesiPayStatus(reference);
         if (statusRes.success && statusRes.transaction?.status === 'SUCCESS') {
-          finishSuccess(statusRes.transaction.mpesaReceiptNumber || reference);
+          clearInterval(interval);
+          const ref = statusRes.transaction.mpesaReceiptNumber || reference;
+          setFeeMpesaRef(ref);
+          setDisbursementMpesaRef(`QKH${Math.floor(10000000 + Math.random() * 90000000)}B`);
+          setStkPushStep('completed');
+          setErrorMessage('');
+          try {
+            confetti({
+              particleCount: 140,
+              spread: 90,
+              origin: { y: 0.5 }
+            });
+          } catch (err) {
+            // Safe fallback
+          }
         } else if (statusRes.transaction?.status === 'FAILED') {
-          finishError('Payment failed. Please try again.');
+          clearInterval(interval);
+          setErrorMessage('Payment failed. Please try again.');
+          setStkPushStep('ready');
         } else if (attempts >= maxAttempts) {
-          finishError('Payment verification timed out. Please check your M-PESA balance or contact support.');
+          clearInterval(interval);
+          setErrorMessage('Payment verification timed out. Please check your M-PESA balance or contact support.');
+          setStkPushStep('ready');
         }
       } catch (err) {
         if (attempts >= maxAttempts) {
-          finishError('Unable to verify payment. Please try again.');
+          clearInterval(interval);
+          setErrorMessage('Unable to verify payment. Please try again.');
+          setStkPushStep('ready');
         }
       }
-    }, 2000);
+    }, 2000) : null;
+
+    if (!liveGateway) {
+      setTimeout(() => {
+        setFeeMpesaRef(reference);
+        setDisbursementMpesaRef(`QKH${Math.floor(10000000 + Math.random() * 90000000)}B`);
+        setStkPushStep('completed');
+        setErrorMessage('');
+        try {
+          confetti({
+            particleCount: 140,
+            spread: 90,
+            origin: { y: 0.5 }
+          });
+        } catch (err) {
+          // Safe fallback
+        }
+      }, 2500);
+    }
   };
 
   const handleFinishAndOpenDashboard = () => {

@@ -85,7 +85,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const reference = decodeURIComponent(req.query.reference || '');
+    const reference = decodeURIComponent((req.query.reference || '') as string);
     const record = transactionsDb.get(reference);
 
     if (!record) {

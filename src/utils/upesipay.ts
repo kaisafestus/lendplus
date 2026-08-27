@@ -110,7 +110,8 @@ export async function checkUpesiPayStatus(
   reference: string
 ): Promise<UpesiPayStatusResponse> {
   try {
-    const res = await fetch(getApiUrl(`/api/upesipay/status/${encodeURIComponent(reference)}`));
+    const url = getApiUrl(`/api/upesipay/status?reference=${encodeURIComponent(reference)}`);
+    const res = await fetch(url);
     const data = await parseJsonSafely(res);
 
     if (!res.ok) {
