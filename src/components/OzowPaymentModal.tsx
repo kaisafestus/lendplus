@@ -46,51 +46,58 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
 
   if (!isOpen) return null;
 
-  const startPolling = (reference: string) => {
+  const startPolling = (reference: string, liveGateway: boolean = true) => {
     let attempts = 0;
-    const maxAttempts = 30;
+    const maxAttempts = liveGateway ? 30 : 6;
+
+    const finishSuccess = (ref: string) => {
+      clearInterval(pollingRef.current!);
+      pollingRef.current = null;
+      setPaymentRef(ref);
+      setIsProcessing(false);
+      setStep('success');
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      } catch (err) {
+        // Safe fallback
+      }
+      onPaymentSuccess(payAmount, 'Upesi Pay M-PESA Express (STK Push)', ref);
+    };
+
+    const finishError = (message: string) => {
+      clearInterval(pollingRef.current!);
+      pollingRef.current = null;
+      setIsProcessing(false);
+      setError(message);
+      setStep('input');
+    };
+
+    if (!liveGateway) {
+      setTimeout(() => {
+        const simulatedRef = paymentRef || reference;
+        finishSuccess(simulatedRef);
+      }, 2500);
+      return;
+    }
 
     pollingRef.current = window.setInterval(async () => {
       attempts++;
       try {
         const statusRes = await checkUpesiPayStatus(reference);
         if (statusRes.success && statusRes.transaction?.status === 'SUCCESS') {
-          clearInterval(pollingRef.current!);
-          pollingRef.current = null;
-          const ref = statusRes.transaction.mpesaReceiptNumber || reference;
-          setPaymentRef(ref);
-          setIsProcessing(false);
-          setStep('success');
-          try {
-            confetti({
-              particleCount: 80,
-              spread: 70,
-              origin: { y: 0.6 }
-            });
-          } catch (err) {
-            // Safe fallback
-          }
-          onPaymentSuccess(payAmount, 'Upesi Pay M-PESA Express (STK Push)', ref);
+          finishSuccess(statusRes.transaction.mpesaReceiptNumber || reference);
         } else if (statusRes.transaction?.status === 'FAILED') {
-          clearInterval(pollingRef.current!);
-          pollingRef.current = null;
-          setIsProcessing(false);
-          setError('Payment failed. Please try again.');
-          setStep('input');
+          finishError('Payment failed. Please try again.');
         } else if (attempts >= maxAttempts) {
-          clearInterval(pollingRef.current!);
-          pollingRef.current = null;
-          setIsProcessing(false);
-          setError('Payment verification timed out. Please check your M-PESA balance or contact support.');
-          setStep('input');
+          finishError('Payment verification timed out. Please check your M-PESA balance or contact support.');
         }
       } catch (err) {
         if (attempts >= maxAttempts) {
-          clearInterval(pollingRef.current!);
-          pollingRef.current = null;
-          setIsProcessing(false);
-          setError('Unable to verify payment. Please try again.');
-          setStep('input');
+          finishError('Unable to verify payment. Please try again.');
         }
       }
     }, 2000);
@@ -117,7 +124,7 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
       if (res.success && res.reference) {
         setPaymentRef(res.reference);
         setStep('processing');
-        startPolling(res.reference);
+        startPolling(res.reference, Boolean(res.liveGateway));
       } else {
         setIsProcessing(false);
         setError(res.error || 'Failed to initiate STK Push. Please try again.');
