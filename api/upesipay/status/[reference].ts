@@ -62,6 +62,20 @@ function getTransactionsDb(): Map<string, {
   return global.lendplusTransactionsDb;
 }
 
+interface TransactionRecord {
+  reference: string;
+  checkoutRequestId: string;
+  merchantRequestId?: string;
+  phoneNumber: string;
+  amount: number;
+  type: 'loan_application_fee' | 'loan_repayment';
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  mpesaReceiptNumber?: string;
+  timestamp: string;
+  description: string;
+  rawResponse?: any;
+}
+
 export default async function handler(req: any, res: any) {
   const transactionsDb = getTransactionsDb();
 

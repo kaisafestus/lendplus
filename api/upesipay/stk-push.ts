@@ -62,6 +62,17 @@ function getTransactionsDb(): Map<string, {
   return global.lendplusTransactionsDb;
 }
 
+function getRequestBody(req: any): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk: any) => {
+      body += chunk;
+    });
+    req.on('end', () => resolve(body));
+    req.on('error', reject);
+  });
+}
+
 interface TransactionRecord {
   reference: string;
   checkoutRequestId: string;
@@ -85,7 +96,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const body = await req.text();
+    const body = await getRequestBody(req);
     const parsed = body ? JSON.parse(body) : {};
     const { phoneNumber, amount, type = 'loan_application_fee', description, accountReference } = parsed;
 

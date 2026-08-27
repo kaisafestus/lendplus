@@ -62,6 +62,31 @@ function getTransactionsDb(): Map<string, {
   return global.lendplusTransactionsDb;
 }
 
+function getRequestBody(req: any): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk: any) => {
+      body += chunk;
+    });
+    req.on('end', () => resolve(body));
+    req.on('error', reject);
+  });
+}
+
+interface TransactionRecord {
+  reference: string;
+  checkoutRequestId: string;
+  merchantRequestId?: string;
+  phoneNumber: string;
+  amount: number;
+  type: 'loan_application_fee' | 'loan_repayment';
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  mpesaReceiptNumber?: string;
+  timestamp: string;
+  description: string;
+  rawResponse?: any;
+}
+
 export default async function handler(req: any, res: any) {
   const transactionsDb = getTransactionsDb();
 
@@ -71,7 +96,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const body = await req.text();
+    const body = await getRequestBody(req);
     const callbackData = body ? JSON.parse(body) : {};
     console.log('[UpesiPay Webhook IPN Received]:', JSON.stringify(callbackData, null, 2));
 
@@ -80,7 +105,7 @@ export default async function handler(req: any, res: any) {
     const resultCode = callbackData?.result_code ?? callbackData?.ResultCode;
 
     if (ref && transactionsDb.has(ref)) {
-      const record = transactionsDb.get(ref)!;
+      const record = transactionsDb.get(ref)! as TransactionRecord;
       if (resultCode === 0 || resultCode === '0' || callbackData?.status === 'SUCCESS') {
         record.status = 'SUCCESS';
         record.mpesaReceiptNumber = receipt || `QKH${Math.floor(10000000 + Math.random() * 90000000)}Y`;
