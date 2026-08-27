@@ -115,9 +115,10 @@ export default function App() {
 
   const handleTabChange = (tab: string) => {
     if (tab === 'dashboard' && !isAuthenticated) {
+      const targetTab: string = tab;
       requireAuth(() => {
-        setCurrentTab(tab);
-        window.location.hash = tab === 'home' ? '' : `#/${tab}`;
+        setCurrentTab(targetTab);
+        window.location.hash = targetTab === 'home' ? '' : `#/${targetTab}`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
       return;
