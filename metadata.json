@@ -1,0 +1,6 @@
+{
+  "name": "Lendplus Kenya",
+  "description": "Responsive web application and portal for Lendplus (ke.lendplus) digital micro-loans in Kenya with instant M-PESA disbursement, KES loan calculator, CBK compliance, Kenyan ID verification, and M-PESA STK Push repayments.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

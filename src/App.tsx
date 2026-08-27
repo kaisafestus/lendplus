@@ -1,0 +1,254 @@
+import React, { useState, useEffect } from 'react';
+import { Navbar } from './components/Navbar';
+import { Hero } from './components/Hero';
+import { LoanCalculator } from './components/LoanCalculator';
+import { HowItWorks } from './components/HowItWorks';
+import { EligibilitySection } from './components/EligibilitySection';
+import { RatesAndFees } from './components/RatesAndFees';
+import { RepaymentsSection } from './components/RepaymentsSection';
+import { ClientDashboard } from './components/ClientDashboard';
+import { FaqSection } from './components/FaqSection';
+import { ContactSection } from './components/ContactSection';
+import { Footer } from './components/Footer';
+import { LoanApplicationModal } from './components/LoanApplicationModal';
+import { OzowPaymentModal } from './components/OzowPaymentModal';
+import { LoginModal } from './components/LoginModal';
+import { MobileAppSimulator } from './components/MobileAppSimulator';
+import { DEMO_USERS, INITIAL_DEMO_LOANS } from './data/mockData';
+import { UserProfile, LoanRecord } from './types';
+
+export default function App() {
+  const [currentTab, setCurrentTab] = useState<string>('home');
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(DEMO_USERS[0]);
+  const [allLoans, setAllLoans] = useState<LoanRecord[]>(INITIAL_DEMO_LOANS);
+
+  // Application Modal state
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState<boolean>(false);
+  const [applyParams, setApplyParams] = useState<{ amount: number; termDays: number; isReturning: boolean }>({
+    amount: 10000,
+    termDays: 6,
+    isReturning: false,
+  });
+
+  // Login Modal state
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+
+  // M-PESA / Repayment Modal state
+  const [isOzowModalOpen, setIsOzowModalOpen] = useState<boolean>(false);
+  const [ozowParams, setOzowParams] = useState<{ loanNumber: string; amount: number }>({
+    loanNumber: 'LP-KE-2026-94821',
+    amount: 3750,
+  });
+
+  // Mobile App Frame Simulator state
+  const [isAppSimulatorOpen, setIsAppSimulatorOpen] = useState<boolean>(false);
+
+  // Derive active loan for the logged-in user
+  const userActiveLoan = allLoans.find(
+    (loan) => loan.userId === currentUser?.id && (loan.status === 'active' || loan.status === 'approved')
+  ) || null;
+
+  // Sync URL hash with tabs and endpoints dynamically
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+      if (!hash || hash === 'home') {
+        setCurrentTab('home');
+      } else if (hash.startsWith('apply')) {
+        setIsApplyModalOpen(true);
+      } else if (['calculator', 'how-it-works', 'eligibility', 'rates', 'repayments', 'dashboard', 'faq', 'contact'].includes(hash)) {
+        setCurrentTab(hash);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    // Initialize on load
+    handleHashChange();
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const handleTabChange = (tab: string) => {
+    setCurrentTab(tab);
+    window.location.hash = tab === 'home' ? '' : `#/${tab}`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Handlers
+  const handleStartApply = (amount: number = 10000, termDays: number = 6, isReturning: boolean = false) => {
+    setApplyParams({ amount, termDays, isReturning });
+    setIsApplyModalOpen(true);
+    window.location.hash = `#/apply`;
+  };
+
+  const handleCloseApply = () => {
+    setIsApplyModalOpen(false);
+    if (window.location.hash.includes('apply')) {
+      window.location.hash = currentTab === 'home' ? '' : `#/${currentTab}`;
+    }
+  };
+
+  const handleApplicationCompleted = (newLoan: LoanRecord, newProfile: UserProfile) => {
+    setCurrentUser(newProfile);
+    setAllLoans((prev) => [newLoan, ...prev]);
+    setCurrentTab('dashboard');
+    window.location.hash = `#/dashboard`;
+  };
+
+  const handleOpenOzow = (loanNumber: string, amount: number) => {
+    setOzowParams({ loanNumber, amount });
+    setIsOzowModalOpen(true);
+  };
+
+  const handleOzowPaymentSuccess = (amount: number, method: 'M-PESA Express STK Push' | 'M-PESA Paybill (4085435)' | 'Bank Transfer', reference: string) => {
+    if (!userActiveLoan) return;
+
+    const newBalance = Math.max(0, userActiveLoan.balanceRemaining - amount);
+    const updatedLoan: LoanRecord = {
+      ...userActiveLoan,
+      balanceRemaining: newBalance,
+      paidAmount: userActiveLoan.paidAmount + amount,
+      status: newBalance === 0 ? 'paid' : 'active',
+      payments: [
+        {
+          id: `pay_${Date.now()}`,
+          loanId: userActiveLoan.id,
+          amount,
+          date: new Date().toISOString().split('T')[0],
+          method,
+          status: 'Completed',
+          reference,
+        },
+        ...userActiveLoan.payments,
+      ],
+    };
+
+    setAllLoans((prev) => prev.map((l) => (l.id === updatedLoan.id ? updatedLoan : l)));
+  };
+
+  const handleSwitchUser = (userId: string) => {
+    const found = DEMO_USERS.find((u) => u.id === userId);
+    if (found) {
+      setCurrentUser(found);
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setCurrentTab('home');
+    window.location.hash = '';
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+      {/* Navigation Header */}
+      <Navbar
+        currentTab={currentTab}
+        setCurrentTab={handleTabChange}
+        currentUser={currentUser}
+        onOpenLogin={() => setIsLoginModalOpen(true)}
+        onOpenApply={() => handleStartApply(10000, 6, false)}
+        activeLoan={userActiveLoan}
+        isAppSimulatorOpen={isAppSimulatorOpen}
+        setIsAppSimulatorOpen={setIsAppSimulatorOpen}
+      />
+
+      {/* Main View Router */}
+      <main className="flex-1 w-full overflow-x-hidden">
+        {currentTab === 'dashboard' && currentUser ? (
+          <ClientDashboard
+            currentUser={currentUser}
+            activeLoan={userActiveLoan}
+            allLoans={allLoans}
+            onOpenOzowRepay={handleOpenOzow}
+            onApplyNewLoan={() => handleStartApply(currentUser.isReturning ? 50000 : 10000, 6, currentUser.isReturning)}
+            onSwitchUser={handleSwitchUser}
+            onLogout={handleLogout}
+          />
+        ) : (
+          <>
+            {/* Landing & Key Sections */}
+            {(currentTab === 'home' || currentTab === 'calculator') && (
+              <Hero
+                onStartApplication={handleStartApply}
+                onOpenEligibility={() => handleTabChange('eligibility')}
+              />
+            )}
+
+            {(currentTab === 'home' || currentTab === 'how-it-works') && (
+              <HowItWorks onStartApply={() => handleStartApply(10000, 6, false)} />
+            )}
+
+            {(currentTab === 'home' || currentTab === 'eligibility') && (
+              <EligibilitySection onStartApply={() => handleStartApply(10000, 6, false)} />
+            )}
+
+            {(currentTab === 'home' || currentTab === 'rates') && (
+              <RatesAndFees />
+            )}
+
+            {(currentTab === 'home' || currentTab === 'repayments') && (
+              <RepaymentsSection
+                onOpenOzowDemo={() => handleOpenOzow('LP-KE-DEMO-8492', 3750)}
+              />
+            )}
+
+            {(currentTab === 'home' || currentTab === 'faq') && (
+              <FaqSection />
+            )}
+
+            {(currentTab === 'home' || currentTab === 'contact') && (
+              <ContactSection />
+            )}
+          </>
+        )}
+      </main>
+
+      {/* Footer */}
+      <Footer
+        onSelectTab={handleTabChange}
+        onOpenApply={() => handleStartApply(10000, 6, false)}
+      />
+
+      {/* Application Wizard Modal */}
+      <LoanApplicationModal
+        isOpen={isApplyModalOpen}
+        onClose={handleCloseApply}
+        initialAmount={applyParams.amount}
+        initialTerm={applyParams.termDays}
+        isReturning={applyParams.isReturning}
+        onApplicationCompleted={handleApplicationCompleted}
+      />
+
+      {/* M-PESA & Bank Payment Modal */}
+      <OzowPaymentModal
+        isOpen={isOzowModalOpen}
+        onClose={() => setIsOzowModalOpen(false)}
+        loanNumber={ozowParams.loanNumber}
+        defaultAmount={ozowParams.amount}
+        onPaymentSuccess={handleOzowPaymentSuccess}
+      />
+
+      {/* Client Login Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          handleTabChange('dashboard');
+        }}
+      />
+
+      {/* Mobile App Device Simulator */}
+      <MobileAppSimulator
+        isOpen={isAppSimulatorOpen}
+        onClose={() => setIsAppSimulatorOpen(false)}
+        currentUser={currentUser}
+        activeLoan={userActiveLoan}
+        onStartApply={handleStartApply}
+        onOpenOzow={handleOpenOzow}
+      />
+    </div>
+  );
+}
