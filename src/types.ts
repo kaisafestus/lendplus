@@ -59,6 +59,7 @@ export interface UserProfile {
 
   isReturning: boolean;
   creditScore?: number;
+  password?: string;
 }
 
 export interface LoanRecord {

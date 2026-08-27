@@ -104,7 +104,7 @@ export const MobileAppSimulator: React.FC<MobileAppSimulatorProps> = ({
                       <div>
                         <p className="text-[10px] text-slate-400">Karibu Back</p>
                         <h4 className="font-extrabold text-base font-['Outfit'] text-white">
-                          {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Faith Mwangi'}
+                          {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Guest User'}
                         </h4>
                       </div>
                       <span className="text-[10px] font-bold bg-orange-500/20 text-orange-300 border border-orange-500/30 px-2 py-0.5 rounded-full">
@@ -232,23 +232,23 @@ export const MobileAppSimulator: React.FC<MobileAppSimulatorProps> = ({
                 <div className="space-y-3">
                   <div className="p-4 rounded-2xl bg-white border border-orange-200/80 text-center space-y-2">
                     <div className="w-12 h-12 rounded-full bg-orange-100 text-orange-700 font-bold text-sm flex items-center justify-center mx-auto border border-orange-200">
-                      {currentUser ? currentUser.firstName.charAt(0) : 'F'}
+                      {currentUser ? currentUser.firstName.charAt(0) : 'G'}
                     </div>
                     <div className="font-bold text-sm text-slate-900">
-                      {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Faith Mwangi'}
+                      {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Guest User'}
                     </div>
                     <div className="text-[10px] text-slate-400">
-                      National ID: {currentUser?.idNumber || '34892019'}
+                      National ID: {currentUser?.idNumber || 'Not provided'}
                     </div>
                   </div>
                   <div className="p-3 bg-white rounded-2xl border border-slate-200 space-y-2 text-[11px]">
                     <div className="flex justify-between py-1 border-b border-slate-100">
                       <span className="text-slate-500">Payout Channel:</span>
-                      <span className="font-bold text-slate-800">{currentUser?.bankName || 'Safaricom M-PESA'}</span>
+                       <span className="font-bold text-slate-800">{currentUser?.bankName || 'M-PESA'}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-100">
                       <span className="text-slate-500">Income:</span>
-                      <span className="font-bold text-slate-800">{currentUser ? formatKES(currentUser.monthlyIncome) : 'KSh 65,000'}</span>
+                       <span className="font-bold text-slate-800">{currentUser ? formatKES(currentUser.monthlyIncome) : 'KSh 0'}</span>
                     </div>
                     <div className="flex justify-between py-1">
                       <span className="text-slate-500">Status:</span>

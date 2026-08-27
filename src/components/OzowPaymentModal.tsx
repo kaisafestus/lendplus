@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   X, 
   ShieldCheck, 
@@ -10,7 +10,7 @@ import {
   Zap
 } from 'lucide-react';
 import { formatKES } from '../utils/loanCalculator';
-import { initiateUpesiPayStkPush, confirmUpesiPayPayment } from '../utils/upesipay';
+import { initiateUpesiPayStkPush, checkUpesiPayStatus } from '../utils/upesipay';
 import confetti from 'canvas-confetti';
 
 interface OzowPaymentModalProps {
@@ -30,12 +30,71 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
 }) => {
   const [payAmount, setPayAmount] = useState<number>(defaultAmount || 3750);
   const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [step, setStep] = useState<'input' | 'prompt_sent' | 'authorizing' | 'success'>('input');
+  const [step, setStep] = useState<'input' | 'processing' | 'success'>('input');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [paymentRef, setPaymentRef] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const pollingRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, []);
 
   if (!isOpen) return null;
+
+  const startPolling = (reference: string) => {
+    let attempts = 0;
+    const maxAttempts = 30;
+
+    pollingRef.current = window.setInterval(async () => {
+      attempts++;
+      try {
+        const statusRes = await checkUpesiPayStatus(reference);
+        if (statusRes.success && statusRes.transaction?.status === 'SUCCESS') {
+          clearInterval(pollingRef.current!);
+          pollingRef.current = null;
+          const ref = statusRes.transaction.mpesaReceiptNumber || reference;
+          setPaymentRef(ref);
+          setIsProcessing(false);
+          setStep('success');
+          try {
+            confetti({
+              particleCount: 80,
+              spread: 70,
+              origin: { y: 0.6 }
+            });
+          } catch (err) {
+            // Safe fallback
+          }
+          onPaymentSuccess(payAmount, 'Upesi Pay M-PESA Express (STK Push)', ref);
+        } else if (statusRes.transaction?.status === 'FAILED') {
+          clearInterval(pollingRef.current!);
+          pollingRef.current = null;
+          setIsProcessing(false);
+          setError('Payment failed. Please try again.');
+          setStep('input');
+        } else if (attempts >= maxAttempts) {
+          clearInterval(pollingRef.current!);
+          pollingRef.current = null;
+          setIsProcessing(false);
+          setError('Payment verification timed out. Please check your M-PESA balance or contact support.');
+          setStep('input');
+        }
+      } catch (err) {
+        if (attempts >= maxAttempts) {
+          clearInterval(pollingRef.current!);
+          pollingRef.current = null;
+          setIsProcessing(false);
+          setError('Unable to verify payment. Please try again.');
+          setStep('input');
+        }
+      }
+    }, 2000);
+  };
 
   const handleSendStkPush = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,60 +106,38 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
     setIsProcessing(true);
 
     try {
-      await initiateUpesiPayStkPush({
+      const res = await initiateUpesiPayStkPush({
         phoneNumber: phoneNumber.trim(),
         amount: payAmount,
         type: 'loan_repayment',
         description: `Lendplus Loan ${loanNumber} Repayment`,
         accountReference: `LP_REP_${loanNumber}`
       });
+      
+      if (res.success && res.reference) {
+        setPaymentRef(res.reference);
+        setStep('processing');
+        startPolling(res.reference);
+      } else {
+        setIsProcessing(false);
+        setError(res.error || 'Failed to initiate STK Push. Please try again.');
+      }
     } catch (err) {
       console.warn('Upesi Pay STK dispatch note:', err);
-    }
-
-    setTimeout(() => {
       setIsProcessing(false);
-      setStep('prompt_sent');
-    }, 800);
-  };
-
-  const handleAuthorizePayment = async () => {
-    setIsProcessing(true);
-    setStep('authorizing');
-
-    try {
-      const confirmRes = await confirmUpesiPayPayment(`LP_REP_${loanNumber}`);
-      const ref = confirmRes?.mpesaReceiptNumber || `QKH${Math.floor(10000000 + Math.random() * 90000000)}Y`;
-      setPaymentRef(ref);
-      
-      setTimeout(() => {
-        setIsProcessing(false);
-        setStep('success');
-        
-        try {
-          confetti({
-            particleCount: 80,
-            spread: 70,
-            origin: { y: 0.6 }
-          });
-        } catch (err) {
-          // Safe fallback
-        }
-
-        onPaymentSuccess(payAmount, 'Upesi Pay M-PESA Express (STK Push)', ref);
-      }, 1200);
-    } catch (err) {
-      const ref = `QKH${Math.floor(10000000 + Math.random() * 90000000)}Y`;
-      setPaymentRef(ref);
-      setIsProcessing(false);
-      setStep('success');
-      onPaymentSuccess(payAmount, 'Upesi Pay M-PESA Express (STK Push)', ref);
+      setError('Failed to connect to payment gateway. Please try again.');
     }
   };
 
   const handleReset = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
     setStep('input');
     setIsProcessing(false);
+    setPaymentRef('');
+    setError('');
     onClose();
   };
 
@@ -121,12 +158,14 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={handleReset}
-            className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {step === 'input' && (
+            <button
+              onClick={handleReset}
+              className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Payment Meta Info */}
@@ -230,50 +269,36 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
           </div>
         )}
 
-        {/* Step 2: Simulated In-App Push Prompt */}
-        {step === 'prompt_sent' && (
-          <div className="p-6 text-center space-y-4">
+        {/* Step 2: Waiting for M-PESA Confirmation */}
+        {step === 'processing' && (
+          <div className="p-8 text-center space-y-4">
             <div className="w-14 h-14 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mx-auto">
-              <Smartphone className="w-7 h-7 animate-pulse" />
+              <Loader2 className="w-7 h-7 animate-spin" />
             </div>
 
             <div>
-              <h4 className="text-base font-bold text-slate-900 font-['Outfit']">Check Your Phone Screen</h4>
+              <h4 className="text-base font-bold text-slate-900 font-['Outfit']">Waiting for M-PESA Confirmation</h4>
               <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-                An M-PESA STK prompt for <strong className="text-slate-900">{formatKES(payAmount)}</strong> to <strong className="text-slate-900">Lendplus Kenya</strong> was sent to <strong>{phoneNumber}</strong>.
+                An M-PESA STK prompt for <strong className="text-slate-900">{formatKES(payAmount)}</strong> was sent to <strong>{phoneNumber}</strong>.
               </p>
             </div>
 
             <div className="p-3 bg-slate-900 text-white border border-slate-800 rounded-2xl text-xs font-mono text-left space-y-1.5">
               <div className="text-orange-400 font-bold uppercase tracking-wider text-[10px]">Upesi Pay • Safaricom STK Prompt</div>
-              <p className="text-slate-300">Do you want to pay KSh {payAmount} to Lendplus Kenya Ltd (AT275)? Enter M-PESA PIN:</p>
-              <div className="text-amber-400 tracking-widest text-center font-bold py-1 bg-slate-800 rounded-lg">••••</div>
+              <p className="text-slate-300">Please enter your M-PESA PIN on your phone to complete the payment.</p>
             </div>
 
             <button
               type="button"
-              onClick={handleAuthorizePayment}
-              disabled={isProcessing}
-              className="w-full py-3.5 bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-orange-600/25 flex items-center justify-center gap-2 transition-colors"
+              onClick={handleReset}
+              className="text-xs text-slate-500 hover:text-slate-700 underline"
             >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Confirm PIN Entered & Complete Payment</span>
+              Cancel and return
             </button>
           </div>
         )}
 
-        {/* Step 3: Authorizing */}
-        {step === 'authorizing' && (
-          <div className="p-8 text-center space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mx-auto">
-              <Loader2 className="w-7 h-7 animate-spin" />
-            </div>
-            <h4 className="text-base font-bold text-slate-900 font-['Outfit']">Reconciling Upesi Pay M-PESA Payment...</h4>
-            <p className="text-xs text-slate-500">Updating your loan balance in real-time...</p>
-          </div>
-        )}
-
-        {/* Step 4: Success Receipt */}
+        {/* Step 3: Success Receipt */}
         {step === 'success' && (
           <div className="p-6 text-center space-y-4">
             <div className="w-14 h-14 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mx-auto shadow-md shadow-orange-500/20">
@@ -325,4 +350,3 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
     </div>
   );
 };
-

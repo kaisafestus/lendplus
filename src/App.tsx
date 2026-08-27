@@ -12,14 +12,15 @@ import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
 import { LoanApplicationModal } from './components/LoanApplicationModal';
 import { OzowPaymentModal } from './components/OzowPaymentModal';
-import { LoginModal } from './components/LoginModal';
+import { AuthModal } from './components/AuthModal';
+import { AuthPromptModal } from './components/AuthPromptModal';
 import { MobileAppSimulator } from './components/MobileAppSimulator';
-import { DEMO_USERS, INITIAL_DEMO_LOANS } from './data/mockData';
+import { INITIAL_DEMO_LOANS } from './data/mockData';
 import { UserProfile, LoanRecord } from './types';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>('home');
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(DEMO_USERS[0]);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [allLoans, setAllLoans] = useState<LoanRecord[]>(INITIAL_DEMO_LOANS);
 
   // Application Modal state
@@ -30,8 +31,10 @@ export default function App() {
     isReturning: false,
   });
 
-  // Login Modal state
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  // Auth Modal state
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isAuthPromptOpen, setIsAuthPromptOpen] = useState<boolean>(false);
+  const [pendingAuthAction, setPendingAuthAction] = useState<(() => void) | null>(null);
 
   // M-PESA / Repayment Modal state
   const [isOzowModalOpen, setIsOzowModalOpen] = useState<boolean>(false);
@@ -43,10 +46,37 @@ export default function App() {
   // Mobile App Frame Simulator state
   const [isAppSimulatorOpen, setIsAppSimulatorOpen] = useState<boolean>(false);
 
+  const isAuthenticated = !!currentUser;
+
+  // Restore session from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('lendplus_session');
+      if (saved) {
+        const session = JSON.parse(saved);
+        if (session?.user) {
+          setCurrentUser(session.user);
+        }
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, []);
+
   // Derive active loan for the logged-in user
   const userActiveLoan = allLoans.find(
     (loan) => loan.userId === currentUser?.id && (loan.status === 'active' || loan.status === 'approved')
   ) || null;
+
+  // Auth gate: require login/signup before protected actions
+  const requireAuth = (action: () => void) => {
+    if (isAuthenticated) {
+      action();
+    } else {
+      setPendingAuthAction(() => action);
+      setIsAuthPromptOpen(true);
+    }
+  };
 
   // Sync URL hash with tabs and endpoints dynamically
   useEffect(() => {
@@ -55,10 +85,24 @@ export default function App() {
       if (!hash || hash === 'home') {
         setCurrentTab('home');
       } else if (hash.startsWith('apply')) {
-        setIsApplyModalOpen(true);
+        if (isAuthenticated) {
+          setIsApplyModalOpen(true);
+        } else {
+          setPendingAuthAction(() => () => setIsApplyModalOpen(true));
+          setIsAuthPromptOpen(true);
+        }
       } else if (['calculator', 'how-it-works', 'eligibility', 'rates', 'repayments', 'dashboard', 'faq', 'contact'].includes(hash)) {
-        setCurrentTab(hash);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (hash === 'dashboard' && !isAuthenticated) {
+          setPendingAuthAction(() => () => {
+            setCurrentTab('dashboard');
+            window.location.hash = '#/dashboard';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+          setIsAuthPromptOpen(true);
+        } else {
+          setCurrentTab(hash);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
     };
 
@@ -67,9 +111,17 @@ export default function App() {
 
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+  }, [isAuthenticated]);
 
   const handleTabChange = (tab: string) => {
+    if (tab === 'dashboard' && !isAuthenticated) {
+      requireAuth(() => {
+        setCurrentTab(tab);
+        window.location.hash = tab === 'home' ? '' : `#/${tab}`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      return;
+    }
     setCurrentTab(tab);
     window.location.hash = tab === 'home' ? '' : `#/${tab}`;
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -127,10 +179,19 @@ export default function App() {
     setAllLoans((prev) => prev.map((l) => (l.id === updatedLoan.id ? updatedLoan : l)));
   };
 
-  const handleSwitchUser = (userId: string) => {
-    const found = DEMO_USERS.find((u) => u.id === userId);
-    if (found) {
-      setCurrentUser(found);
+  const handleLoginSuccess = (user: UserProfile) => {
+    setCurrentUser(user);
+    setIsAuthModalOpen(false);
+    setIsAuthPromptOpen(false);
+    try {
+      localStorage.setItem('lendplus_session', JSON.stringify({ user }));
+    } catch (err) {
+      // ignore
+    }
+    if (pendingAuthAction) {
+      const action = pendingAuthAction;
+      setPendingAuthAction(null);
+      action();
     }
   };
 
@@ -138,6 +199,29 @@ export default function App() {
     setCurrentUser(null);
     setCurrentTab('home');
     window.location.hash = '';
+    try {
+      localStorage.removeItem('lendplus_session');
+    } catch (err) {
+      // ignore
+    }
+  };
+
+  const handleOpenAuthPromptForLogin = () => {
+    setIsAuthPromptOpen(false);
+    setIsAuthModalOpen(true);
+  };
+
+  const handleOpenAuthPromptForRegister = () => {
+    setIsAuthPromptOpen(false);
+    setIsAuthModalOpen(true);
+  };
+
+  const wrappedStartApply = (amount: number = 10000, termDays: number = 6, isReturning: boolean = false) => {
+    requireAuth(() => handleStartApply(amount, termDays, isReturning));
+  };
+
+  const wrappedOpenOzow = (loanNumber: string, amount: number) => {
+    requireAuth(() => handleOpenOzow(loanNumber, amount));
   };
 
   return (
@@ -147,8 +231,8 @@ export default function App() {
         currentTab={currentTab}
         setCurrentTab={handleTabChange}
         currentUser={currentUser}
-        onOpenLogin={() => setIsLoginModalOpen(true)}
-        onOpenApply={() => handleStartApply(10000, 6, false)}
+        onOpenLogin={() => setIsAuthModalOpen(true)}
+        onOpenApply={() => wrappedStartApply(10000, 6, false)}
         activeLoan={userActiveLoan}
         isAppSimulatorOpen={isAppSimulatorOpen}
         setIsAppSimulatorOpen={setIsAppSimulatorOpen}
@@ -161,9 +245,9 @@ export default function App() {
             currentUser={currentUser}
             activeLoan={userActiveLoan}
             allLoans={allLoans}
-            onOpenOzowRepay={handleOpenOzow}
-            onApplyNewLoan={() => handleStartApply(currentUser.isReturning ? 50000 : 10000, 6, currentUser.isReturning)}
-            onSwitchUser={handleSwitchUser}
+            onOpenOzowRepay={wrappedOpenOzow}
+            onApplyNewLoan={() => wrappedStartApply(currentUser.isReturning ? 50000 : 10000, 6, currentUser.isReturning)}
+            onSwitchUser={() => {}}
             onLogout={handleLogout}
           />
         ) : (
@@ -171,17 +255,17 @@ export default function App() {
             {/* Landing & Key Sections */}
             {(currentTab === 'home' || currentTab === 'calculator') && (
               <Hero
-                onStartApplication={handleStartApply}
+                onStartApplication={wrappedStartApply}
                 onOpenEligibility={() => handleTabChange('eligibility')}
               />
             )}
 
             {(currentTab === 'home' || currentTab === 'how-it-works') && (
-              <HowItWorks onStartApply={() => handleStartApply(10000, 6, false)} />
+              <HowItWorks onStartApply={() => wrappedStartApply(10000, 6, false)} />
             )}
 
             {(currentTab === 'home' || currentTab === 'eligibility') && (
-              <EligibilitySection onStartApply={() => handleStartApply(10000, 6, false)} />
+              <EligibilitySection onStartApply={() => wrappedStartApply(10000, 6, false)} />
             )}
 
             {(currentTab === 'home' || currentTab === 'rates') && (
@@ -190,7 +274,7 @@ export default function App() {
 
             {(currentTab === 'home' || currentTab === 'repayments') && (
               <RepaymentsSection
-                onOpenOzowDemo={() => handleOpenOzow('LP-KE-DEMO-8492', 3750)}
+                onOpenOzowDemo={() => wrappedOpenOzow('LP-KE-DEMO-8492', 3750)}
               />
             )}
 
@@ -208,7 +292,7 @@ export default function App() {
       {/* Footer */}
       <Footer
         onSelectTab={handleTabChange}
-        onOpenApply={() => handleStartApply(10000, 6, false)}
+        onOpenApply={() => wrappedStartApply(10000, 6, false)}
       />
 
       {/* Application Wizard Modal */}
@@ -230,14 +314,19 @@ export default function App() {
         onPaymentSuccess={handleOzowPaymentSuccess}
       />
 
-      {/* Client Login Modal */}
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onLoginSuccess={(user) => {
-          setCurrentUser(user);
-          handleTabChange('dashboard');
-        }}
+      {/* Auth Modal (Login / Register) */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
+      />
+
+      {/* Auth Prompt Modal */}
+      <AuthPromptModal
+        isOpen={isAuthPromptOpen}
+        onClose={() => setIsAuthPromptOpen(false)}
+        onGoToLogin={handleOpenAuthPromptForLogin}
+        onGoToRegister={handleOpenAuthPromptForRegister}
       />
 
       {/* Mobile App Device Simulator */}
@@ -246,8 +335,8 @@ export default function App() {
         onClose={() => setIsAppSimulatorOpen(false)}
         currentUser={currentUser}
         activeLoan={userActiveLoan}
-        onStartApply={handleStartApply}
-        onOpenOzow={handleOpenOzow}
+        onStartApply={wrappedStartApply}
+        onOpenOzow={wrappedOpenOzow}
       />
     </div>
   );

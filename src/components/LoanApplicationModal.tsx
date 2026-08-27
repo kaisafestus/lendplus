@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { KENYA_BANKS, KENYA_COUNTIES } from '../data/mockData';
 import { calculateLendplusLoan, validateKenyanID, formatKES, APPLICATION_FEE_TIERS, getApplicationFee } from '../utils/loanCalculator';
-import { initiateUpesiPayStkPush, confirmUpesiPayPayment } from '../utils/upesipay';
+import { initiateUpesiPayStkPush, checkUpesiPayStatus } from '../utils/upesipay';
 import { LoanRecord, UserProfile } from '../types';
 import confetti from 'canvas-confetti';
 
@@ -89,8 +89,7 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
   const [signatureMode, setSignatureMode] = useState<'draw' | 'type'>('type');
 
   // Step 7: Application Fee STK Push & Immediate Loan Crediting
-  const [stkPushStep, setStkPushStep] = useState<'ready' | 'prompt_sent' | 'authorizing' | 'disbursing' | 'completed'>('ready');
-  const [stkPinInput, setStkPinInput] = useState<string>('');
+  const [stkPushStep, setStkPushStep] = useState<'ready' | 'processing' | 'completed'>('ready');
   const [stkPushPhone, setStkPushPhone] = useState<string>('');
   const [feeMpesaRef, setFeeMpesaRef] = useState<string>('');
   const [disbursementMpesaRef, setDisbursementMpesaRef] = useState<string>('');
@@ -307,7 +306,6 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
     setErrorMessage('');
     setStkPushStep('ready');
     setStkPushPhone(mpesaNumber.trim() || phone.trim());
-    setStkPinInput('');
     setCurrentStep(7);
   };
 
@@ -319,62 +317,69 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
       return;
     }
     setErrorMessage('');
-    setStkPinInput('');
     
     // Call server Upesi Pay STK push route
     try {
-      await initiateUpesiPayStkPush({
+      const res = await initiateUpesiPayStkPush({
         phoneNumber: cleanPhone,
         amount: appFee,
         type: 'loan_application_fee',
         description: `Lendplus App Fee - KSh ${appFee}`,
         accountReference: `LP_FEE_${Date.now()}`
       });
+      
+      if (res.success && res.reference) {
+        setStkPushStep('processing');
+        startPolling(res.reference);
+      } else {
+        setErrorMessage(res.error || 'Failed to initiate STK Push. Please try again.');
+      }
     } catch (err) {
       console.warn('Upesi Pay STK dispatch note:', err);
+      setErrorMessage('Failed to connect to payment gateway. Please try again.');
     }
-    
-    setStkPushStep('prompt_sent');
   };
 
-  // PIN authorization and immediate B2C loan crediting via Upesi Pay
-  const handleAuthorizeStkPushFee = async () => {
-    if (!stkPinInput || stkPinInput.length < 4) {
-      setErrorMessage('Please enter your 4-digit M-PESA PIN in the prompt to authorize.');
-      return;
-    }
-    setErrorMessage('');
-    setStkPushStep('authorizing');
+  const startPolling = (reference: string) => {
+    let attempts = 0;
+    const maxAttempts = 30;
 
-    try {
-      const confirmRes = await confirmUpesiPayPayment(`LP_FEE_${Date.now()}`);
-      const feeRef = confirmRes?.mpesaReceiptNumber || `QK${Math.floor(10000000 + Math.random() * 90000000)}Y`;
-      setFeeMpesaRef(feeRef);
-    } catch (err) {
-      const feeRef = `QK${Math.floor(10000000 + Math.random() * 90000000)}Y`;
-      setFeeMpesaRef(feeRef);
-    }
-
-    setTimeout(() => {
-      setStkPushStep('disbursing');
-
-      // Disburse loan to M-PESA
-      setTimeout(() => {
-        const disbRef = `QKH${Math.floor(10000000 + Math.random() * 90000000)}B`;
-        setDisbursementMpesaRef(disbRef);
-        setStkPushStep('completed');
-
-        try {
-          confetti({
-            particleCount: 140,
-            spread: 90,
-            origin: { y: 0.5 }
-          });
-        } catch (err) {
-          // Safe fallback
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const statusRes = await checkUpesiPayStatus(reference);
+        if (statusRes.success && statusRes.transaction?.status === 'SUCCESS') {
+          clearInterval(interval);
+          const ref = statusRes.transaction.mpesaReceiptNumber || reference;
+          setFeeMpesaRef(ref);
+          setDisbursementMpesaRef(`QKH${Math.floor(10000000 + Math.random() * 90000000)}B`);
+          setStkPushStep('completed');
+          try {
+            confetti({
+              particleCount: 140,
+              spread: 90,
+              origin: { y: 0.5 }
+            });
+          } catch (err) {
+            // Safe fallback
+          }
+        } else if (statusRes.transaction?.status === 'FAILED') {
+          clearInterval(interval);
+          setErrorMessage('Payment failed. Please try again.');
+          setStkPushStep('ready');
+        } else if (attempts >= maxAttempts) {
+          clearInterval(interval);
+          setErrorMessage('Payment verification timed out. Please check your M-PESA balance or contact support.');
+          setStkPushStep('ready');
         }
-      }, 1600);
-    }, 1200);
+      } catch (err) {
+        if (attempts >= maxAttempts) {
+          clearInterval(interval);
+          setErrorMessage('Unable to verify payment. Please try again.');
+          setStkPushStep('ready');
+        }
+      }
+    }, 2000);
   };
 
   const handleFinishAndOpenDashboard = () => {
@@ -1261,85 +1266,7 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
                 </div>
               )}
 
-              {stkPushStep === 'prompt_sent' && (
-                <div className="space-y-5 animate-in fade-in zoom-in duration-200">
-                  <div className="w-16 h-16 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mx-auto">
-                    <Smartphone className="w-8 h-8 animate-pulse" />
-                  </div>
-
-                  <div>
-                    <h4 className="text-xl font-bold text-slate-900 font-['Outfit']">
-                      Check Your Phone Screen
-                    </h4>
-                    <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                      An M-PESA STK Push prompt for <strong className="text-slate-900">KSh {appFee}</strong> to <strong className="text-slate-900">Lendplus Kenya</strong> was sent to <strong className="font-mono text-orange-700">{stkPushPhone || phone}</strong>.
-                    </p>
-                  </div>
-
-                  {/* Interactive Phone STK Push Prompt UI */}
-                  <div className="max-w-xs mx-auto p-4 rounded-2xl bg-slate-900 text-white border-2 border-orange-500 shadow-xl space-y-3 font-mono text-xs">
-                    <div className="text-center text-orange-400 font-bold text-xs uppercase tracking-wider pb-1 border-b border-slate-800">
-                      Safaricom SIM Toolkit Prompt
-                    </div>
-                    <p className="text-slate-200 leading-relaxed text-left text-xs">
-                      Do you want to pay KSh {appFee} to Lendplus Kenya Ltd? Enter 4-digit M-PESA PIN:
-                    </p>
-                    <div className="py-2.5 px-3 bg-slate-800 rounded-xl text-center flex items-center justify-center gap-2">
-                      {[0, 1, 2, 3].map((i) => (
-                        <div
-                          key={i}
-                          className="w-8 h-8 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center text-lg font-bold text-amber-400 font-mono"
-                        >
-                          {stkPinInput[i] ? '•' : ''}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Numeric Keypad for realistic input */}
-                    <div className="grid grid-cols-3 gap-1.5 pt-2">
-                      {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((k) => (
-                        <button
-                          key={k}
-                          type="button"
-                          onClick={() => {
-                            if (k === 'C') {
-                              setStkPinInput('');
-                            } else if (k === '⌫') {
-                              setStkPinInput(prev => prev.slice(0, -1));
-                            } else if (stkPinInput.length < 4) {
-                              setStkPinInput(prev => prev + k);
-                            }
-                            if (errorMessage) setErrorMessage('');
-                          }}
-                          className={`py-2 rounded-lg font-mono font-bold text-sm transition-colors ${
-                            k === 'C' || k === '⌫'
-                              ? 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                              : 'bg-slate-800 text-white hover:bg-orange-600 hover:text-white'
-                          }`}
-                        >
-                          {k}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={stkPinInput.length < 4}
-                    onClick={handleAuthorizeStkPushFee}
-                    className={`w-full max-w-md mx-auto py-3.5 font-bold text-sm rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all ${
-                      stkPinInput.length === 4
-                        ? 'bg-orange-600 hover:bg-orange-700 text-white shadow-orange-600/30'
-                        : 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                    }`}
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Authorize Payment & Credit My Loan</span>
-                  </button>
-                </div>
-              )}
-
-              {(stkPushStep === 'authorizing' || stkPushStep === 'disbursing') && (
+              {stkPushStep === 'processing' && (
                 <div className="space-y-5 max-w-sm mx-auto py-6">
                   <div className="w-16 h-16 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mx-auto">
                     <Loader2 className="w-8 h-8 animate-spin" />
@@ -1347,19 +1274,17 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
 
                   <div>
                     <h4 className="text-lg font-bold text-slate-900 font-['Outfit']">
-                      {stkPushStep === 'authorizing' ? 'Verifying M-PESA STK Payment...' : 'Crediting Loan to M-PESA...'}
+                      Waiting for M-PESA Confirmation
                     </h4>
                     <p className="text-xs text-slate-500 mt-1">
-                      {stkPushStep === 'authorizing'
-                        ? `Validating receipt of KSh ${appFee} application fee...`
-                        : `Transferring ${formatKES(amount)} directly to ${stkPushPhone || phone}...`}
+                      An M-PESA STK prompt for <strong>KSh {appFee}</strong> was sent to <strong className="font-mono text-orange-700">{stkPushPhone || phone}</strong>. Please enter your PIN on your phone to complete the payment.
                     </p>
                   </div>
 
                   <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                     <div
-                      className="bg-orange-600 h-full transition-all duration-500 rounded-full"
-                      style={{ width: stkPushStep === 'authorizing' ? '50%' : '90%' }}
+                      className="bg-orange-600 h-full transition-all duration-500 rounded-full animate-pulse"
+                      style={{ width: '60%' }}
                     />
                   </div>
                 </div>
