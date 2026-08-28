@@ -46,9 +46,9 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
 
   if (!isOpen) return null;
 
-  const startPolling = (reference: string, liveGateway: boolean = true) => {
+  const startPolling = (reference: string) => {
     let attempts = 0;
-    const maxAttempts = liveGateway ? 30 : 6;
+    const maxAttempts = 30;
 
     const finishSuccess = (ref: string) => {
       clearInterval(pollingRef.current!);
@@ -75,14 +75,6 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
       setError(message);
       setStep('input');
     };
-
-    if (!liveGateway) {
-      setTimeout(() => {
-        const simulatedRef = paymentRef || reference;
-        finishSuccess(simulatedRef);
-      }, 2500);
-      return;
-    }
 
     pollingRef.current = window.setInterval(async () => {
       attempts++;
@@ -124,7 +116,7 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
       if (res.success && res.reference) {
         setPaymentRef(res.reference);
         setStep('processing');
-        startPolling(res.reference, Boolean(res.liveGateway));
+        startPolling(res.checkoutRequestId || res.reference);
       } else {
         setIsProcessing(false);
         setError(res.error || 'Failed to initiate STK Push. Please try again.');

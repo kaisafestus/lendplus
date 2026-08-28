@@ -331,7 +331,7 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
       if (res.success && res.reference) {
         setFeeMpesaRef(res.reference);
         setStkPushStep('processing');
-        startPolling(res.reference, Boolean(res.liveGateway));
+        startPolling(res.checkoutRequestId || res.reference);
       } else {
         setErrorMessage(res.error || 'Failed to initiate STK Push. Please try again.');
       }
@@ -341,10 +341,10 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
     }
   };
 
-  const startPolling = (reference: string, liveGateway: boolean = true) => {
+  const startPolling = (reference: string) => {
     let attempts = 0;
-    const maxAttempts = liveGateway ? 30 : 6;
-    const interval = liveGateway ? setInterval(async () => {
+    const maxAttempts = 30;
+    const interval = setInterval(async () => {
       attempts++;
       try {
         const statusRes = await checkUpesiPayStatus(reference);
@@ -380,25 +380,7 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
           setStkPushStep('ready');
         }
       }
-    }, 2000) : null;
-
-    if (!liveGateway) {
-      setTimeout(() => {
-        setFeeMpesaRef(reference);
-        setDisbursementMpesaRef(`QKH${Math.floor(10000000 + Math.random() * 90000000)}B`);
-        setStkPushStep('completed');
-        setErrorMessage('');
-        try {
-          confetti({
-            particleCount: 140,
-            spread: 90,
-            origin: { y: 0.5 }
-          });
-        } catch (err) {
-          // Safe fallback
-        }
-      }, 2500);
-    }
+    }, 2000);
   };
 
   const handleFinishAndOpenDashboard = () => {

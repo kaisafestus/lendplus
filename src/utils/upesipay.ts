@@ -25,6 +25,7 @@ export interface UpesiPayStkPushResponse {
   message: string;
   reference?: string;
   checkoutRequestId?: string;
+  merchantRequestId?: string;
   merchantId?: string;
   channelId?: string;
   amount?: number;
@@ -149,24 +150,10 @@ export async function confirmUpesiPayPayment(
     });
     const data = await parseJsonSafely(res);
 
-    if (!res.ok) {
-      const fallbackReceipt = `QKH${Math.floor(10000000 + Math.random() * 90000000)}Y`;
-      return {
-        success: true,
-        mpesaReceiptNumber: fallbackReceipt,
-        message:
-          (data && (data.message || data.error)) ||
-          `Payment confirmation fallback (HTTP ${res.status})`,
-      };
-    }
+    if (!res.ok) throw new Error((data && (data.message || data.error)) || `Payment confirmation failed (HTTP ${res.status})`);
 
     return data;
   } catch (err: any) {
-    const fallbackReceipt = `QKH${Math.floor(10000000 + Math.random() * 90000000)}Y`;
-    return {
-      success: true,
-      mpesaReceiptNumber: fallbackReceipt,
-      message: 'Payment completed.',
-    };
+    return { success: false, mpesaReceiptNumber: '', message: err.message || 'Payment confirmation failed.' };
   }
 }

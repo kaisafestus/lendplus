@@ -1,103 +1,44 @@
-export const config = {
-  runtime: 'nodejs',
-};
+export const config = { runtime: 'nodejs' };
 
-const UPESIPAY_CONFIG = {
-  apiUsername: process.env.UPESIPAY_API_USERNAME || 'kyz1LAZ6m0gq5dDrXufm',
-  apiPassword: process.env.UPESIPAY_API_PASSWORD || 'F11tPB3NCaGDIjfLOPdhQj3lizdX0vjkPhsi1PpZ',
-  basicAuth: process.env.UPESIPAY_BASIC_AUTH || 'Basic a3l6MUxBWjZtMGdxNWREclh1Zm06RjExdFBCM05DYUdESWpmTE9QZGhRajNsaXpkWDB2amtQaHNpMVBwWg==',
-  merchantId: process.env.UPESIPAY_MERCHANT_ID || 'AT275',
-  channelId: process.env.UPESIPAY_CHANNEL_ID || '99',
-  baseUrl: process.env.UPESIPAY_BASE_URL || 'https://api.upesipay.com',
-  callbackUrl: process.env.UPESIPAY_CALLBACK_URL || '',
-};
+const UPESIPAY_STATUS_URL = process.env.UPESIPAY_STATUS_URL || 'https://upesipay.com/api/v2/transaction-status';
+const UPESIPAY_BASIC_AUTH = process.env.UPESIPAY_BASIC_AUTH || '';
 
-function normalizeKenyanPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, '');
-  if (digits.startsWith('254') && digits.length === 12) {
-    return digits;
-  }
-  if (digits.startsWith('0') && digits.length === 10) {
-    return `254${digits.substring(1)}`;
-  }
-  if (digits.length === 9) {
-    return `254${digits}`;
-  }
-  return digits;
-}
-
-declare global {
-  // eslint-disable-next-line no-var
-  var lendplusTransactionsDb: Map<string, {
-    reference: string;
-    checkoutRequestId: string;
-    merchantRequestId?: string;
-    phoneNumber: string;
-    amount: number;
-    type: 'loan_application_fee' | 'loan_repayment';
-    status: 'PENDING' | 'SUCCESS' | 'FAILED';
-    mpesaReceiptNumber?: string;
-    timestamp: string;
-    description: string;
-    rawResponse?: any;
-  }> | undefined;
-}
-
-function getTransactionsDb(): Map<string, {
-  reference: string;
-  checkoutRequestId: string;
-  merchantRequestId?: string;
-  phoneNumber: string;
-  amount: number;
-  type: 'loan_application_fee' | 'loan_repayment';
-  status: 'PENDING' | 'SUCCESS' | 'FAILED';
-  mpesaReceiptNumber?: string;
-  timestamp: string;
-  description: string;
-  rawResponse?: any;
-}> {
-  if (!global.lendplusTransactionsDb) {
-    global.lendplusTransactionsDb = new Map();
-  }
-  return global.lendplusTransactionsDb;
-}
-
-interface TransactionRecord {
-  reference: string;
-  checkoutRequestId: string;
-  merchantRequestId?: string;
-  phoneNumber: string;
-  amount: number;
-  type: 'loan_application_fee' | 'loan_repayment';
-  status: 'PENDING' | 'SUCCESS' | 'FAILED';
-  mpesaReceiptNumber?: string;
-  timestamp: string;
-  description: string;
-  rawResponse?: any;
+async function readResponse(response: Response): Promise<any> {
+  const text = await response.text();
+  try { return text ? JSON.parse(text) : {}; } catch { return { message: text || response.statusText }; }
 }
 
 export default async function handler(req: any, res: any) {
-  const transactionsDb = getTransactionsDb();
-
-  if (req.method !== 'GET') {
-    res.status(405).json({ success: false, error: 'Method not allowed' });
-    return;
-  }
+  if (req.method !== 'GET') return res.status(405).json({ success: false, error: 'Method not allowed' });
+  const reference = String(req.query.reference || '');
+  if (!reference) return res.status(400).json({ success: false, error: 'Transaction reference is required.' });
+  if (!UPESIPAY_BASIC_AUTH) return res.status(500).json({ success: false, error: 'UpesiPay is not configured on the server.' });
 
   try {
-    const reference = decodeURIComponent((req.query.reference || '') as string);
-    const record = transactionsDb.get(reference);
-
-    if (!record) {
-      res.status(404).json({ success: false, error: 'Transaction not found', reference });
-      return;
+    const response = await fetch(`${UPESIPAY_STATUS_URL}?reference=${encodeURIComponent(reference)}`, {
+      headers: { Authorization: UPESIPAY_BASIC_AUTH },
+    });
+    const gateway = await readResponse(response);
+    if (!response.ok || gateway?.success !== true) {
+      return res.status(response.ok ? 502 : response.status).json({ success: false, error: gateway?.message || 'Unable to retrieve transaction status.' });
     }
 
-    res.status(200).json({
+    const transaction = gateway.data || {};
+    const status = String(transaction.status || '').toLowerCase();
+    return res.status(200).json({
       success: true,
-      transaction: record,
+      transaction: {
+        reference,
+        checkoutRequestId: transaction.checkout_request_id || reference,
+        merchantRequestId: transaction.merchant_request_id,
+        phoneNumber: transaction.phone_number,
+        amount: transaction.amount,
+        status: status === 'success' ? 'SUCCESS' : ['failed', 'cancelled', 'timeout'].includes(status) ? 'FAILED' : 'PENDING',
+        mpesaReceiptNumber: transaction.mpesa_receipt_number || transaction.receipt_number,
+      },
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: 'Failed to fetch status', details: error.message });
+    console.error('[UpesiPay] Status error:', error);
+    return res.status(502).json({ success: false, error: 'Unable to reach UpesiPay status service.' });
   }
 }
