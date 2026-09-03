@@ -29,24 +29,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [error, setError] = useState<string>('');
 
   // Login fields
-  const [loginIdentifier, setLoginIdentifier] = useState<string>('');
+  const [loginPhone, setLoginPhone] = useState<string>('');
   const [loginPassword, setLoginPassword] = useState<string>('');
 
   // Register fields
   const [regFirstName, setRegFirstName] = useState<string>('');
   const [regLastName, setRegLastName] = useState<string>('');
-  const [regEmail, setRegEmail] = useState<string>('');
+  const [regPhone, setRegPhone] = useState<string>('');
   const [regPassword, setRegPassword] = useState<string>('');
   const [regConfirmPassword, setRegConfirmPassword] = useState<string>('');
 
   if (!isOpen) return null;
 
+  const normalizePhone = (raw: string): string => {
+    const digits = raw.replace(/\D/g, '');
+    if (digits.startsWith('254') && digits.length === 12) return digits;
+    if (digits.startsWith('0') && digits.length === 10) return `254${digits.substring(1)}`;
+    if (digits.length === 9) return `254${digits}`;
+    return digits;
+  };
+
   const resetForms = () => {
-    setLoginIdentifier('');
+    setLoginPhone('');
     setLoginPassword('');
     setRegFirstName('');
     setRegLastName('');
-    setRegEmail('');
+    setRegPhone('');
     setRegPassword('');
     setRegConfirmPassword('');
     setError('');
@@ -61,11 +69,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     e.preventDefault();
     setError('');
 
-    const identifier = loginIdentifier.trim();
+    const phoneRaw = loginPhone.trim();
     const password = loginPassword.trim();
 
-    if (!identifier || !password) {
-      setError('Please enter your email/phone and password.');
+    if (!phoneRaw || !password) {
+      setError('Please enter your phone number and password.');
+      return;
+    }
+
+    const phoneDigits = phoneRaw.replace(/\D/g, '');
+    if (phoneDigits.length < 9) {
+      setError('Please enter a valid Safaricom M-PESA phone number.');
       return;
     }
 
@@ -75,14 +89,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       try {
         const saved = localStorage.getItem('lendplus_users');
         const users: UserProfile[] = saved ? JSON.parse(saved) : [];
+        const normalizedInput = normalizePhone(phoneRaw);
         const found = users.find(
-          (u) =>
-            (u.email && u.email.toLowerCase() === identifier.toLowerCase()) ||
-            (u.phone && u.phone.replace(/\s+/g, '') === identifier.replace(/\s+/g, ''))
+          (u) => u.phone && u.phone.replace(/\D/g, '') === normalizedInput
         );
 
         if (!found || found.password !== password) {
-          setError('Invalid email/phone or password.');
+          setError('Invalid phone number or password.');
           setIsLoading(false);
           return;
         }
@@ -102,7 +115,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     const firstName = regFirstName.trim();
     const lastName = regLastName.trim();
-    const email = regEmail.trim().toLowerCase();
+    const phoneRaw = regPhone.trim();
     const password = regPassword;
     const confirmPassword = regConfirmPassword;
 
@@ -110,8 +123,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setError('Please enter your full name.');
       return;
     }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address.');
+    if (!phoneRaw) {
+      setError('Please enter your M-PESA phone number.');
+      return;
+    }
+    const phoneDigits = phoneRaw.replace(/\D/g, '');
+    if (phoneDigits.length < 9) {
+      setError('Please enter a valid Safaricom M-PESA phone number.');
       return;
     }
     if (!password || password.length < 6) {
@@ -129,10 +147,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       try {
         const saved = localStorage.getItem('lendplus_users');
         const users: UserProfile[] = saved ? JSON.parse(saved) : [];
+        const normalizedPhone = normalizePhone(phoneRaw);
 
-        const exists = users.some((u) => u.email.toLowerCase() === email);
+        const exists = users.some((u) => u.phone && u.phone.replace(/\D/g, '') === normalizedPhone);
         if (exists) {
-          setError('An account with this email already exists.');
+          setError('An account with this phone number already exists.');
           setIsLoading(false);
           return;
         }
@@ -145,8 +164,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           idNumber: '',
           dateOfBirth: '',
           gender: 'Male',
-          phone: '',
-          email,
+          phone: normalizedPhone,
+          mpesaNumber: normalizedPhone,
+          email: '',
           address: '',
           city: 'Nairobi',
           county: 'Nairobi',
@@ -158,7 +178,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           monthlyExpenses: 0,
           nextPayDate: '',
           payoutMethod: 'M-PESA',
-          mpesaNumber: '',
           bankName: 'Safaricom M-PESA',
           accountType: 'Salary',
           accountNumber: '',
@@ -244,20 +263,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Email or Phone Number
+                  M-PESA Phone Number
                 </label>
                 <div className="relative">
                   <Smartphone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="text"
+                    type="tel"
                     required
-                    placeholder="e.g. borrower@example.co.ke or 0712 345 678"
-                    value={loginIdentifier}
+                    placeholder="e.g. 0712 345 678"
+                    value={loginPhone}
                     onChange={(e) => {
-                      setLoginIdentifier(e.target.value);
+                      setLoginPhone(e.target.value);
                       if (error) setError('');
                     }}
-                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none"
+                    className="w-full pl-10 pr-4 py-2.5 text-sm font-mono border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -340,19 +359,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Email Address <span className="text-red-500">*</span>
+                  M-PESA Phone Number <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="e.g. name@example.co.ke"
-                  value={regEmail}
-                  onChange={(e) => {
-                    setRegEmail(e.target.value);
-                    if (error) setError('');
-                  }}
-                  className="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none"
-                />
+                <div className="relative">
+                  <Smartphone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="tel"
+                    required
+                    placeholder="e.g. 0712 345 678"
+                    value={regPhone}
+                    onChange={(e) => {
+                      setRegPhone(e.target.value);
+                      if (error) setError('');
+                    }}
+                    className="w-full pl-10 pr-4 py-2.5 text-sm font-mono border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">This is the number that will receive STK push prompts.</p>
               </div>
 
               <div>

@@ -406,10 +406,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                 <span className="font-bold text-slate-800 text-sm">{currentUser.phone}</span>
               </div>
               <div className="p-3 bg-slate-50 rounded-xl">
-                <span className="text-slate-400 block">Email Address:</span>
-                <span className="font-bold text-slate-800 text-sm">{currentUser.email}</span>
-              </div>
-              <div className="p-3 bg-slate-50 rounded-xl">
                 <span className="text-slate-400 block">County / City:</span>
                 <span className="font-bold text-slate-800 text-sm">{currentUser.county || 'Nairobi'}, {currentUser.city || 'Nairobi'}</span>
               </div>

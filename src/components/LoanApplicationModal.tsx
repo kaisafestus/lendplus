@@ -56,7 +56,6 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
   const [idNumber, setIdNumber] = useState<string>('');
   const [idValidationResult, setIdValidationResult] = useState<any>(null);
   const [phone, setPhone] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
   const [address, setAddress] = useState<string>('');
   const [city, setCity] = useState<string>('');
   const [county, setCounty] = useState<string>('Nairobi');
@@ -64,15 +63,8 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
 
   // Step 3: Employment
   const [employmentType, setEmploymentType] = useState<string>('Permanently Employed');
-  const [employerName, setEmployerName] = useState<string>('');
-  const [jobTitle, setJobTitle] = useState<string>('');
   const [monthlyIncome, setMonthlyIncome] = useState<string>('');
   const [monthlyExpenses, setMonthlyExpenses] = useState<string>('');
-  const [nextPayDate, setNextPayDate] = useState<string>(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 15);
-    return d.toISOString().split('T')[0];
-  });
 
   // Step 4: Disbursement & Payout
   const [payoutMethod, setPayoutMethod] = useState<'M-PESA' | 'Direct Bank Transfer'>('M-PESA');
@@ -167,12 +159,6 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
         errors.phone = 'Please enter a valid mobile number (e.g. 0712 345 678).';
       }
 
-      if (!email.trim()) {
-        errors.email = 'Email address is required.';
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-        errors.email = 'Please enter a valid email address.';
-      }
-
       if (!address.trim()) {
         errors.address = 'Estate / Street address is required.';
       }
@@ -183,20 +169,11 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
         errors.postalCode = 'Postal code is required.';
       }
     } else if (stepNumber === 3) {
-      if (!employerName.trim()) {
-        errors.employerName = 'Employer or Business name is required.';
-      }
-      if (!jobTitle.trim()) {
-        errors.jobTitle = 'Job title or role is required.';
-      }
       if (!monthlyIncome || Number(monthlyIncome) <= 0) {
         errors.monthlyIncome = 'Please enter your monthly net income.';
       }
       if (monthlyExpenses === '' || Number(monthlyExpenses) < 0) {
         errors.monthlyExpenses = 'Please enter your monthly living expenses.';
-      }
-      if (!nextPayDate) {
-        errors.nextPayDate = 'Next salary or revenue date is required.';
       }
     } else if (stepNumber === 4) {
       const activeNumber = mpesaNumber.trim() || phone.trim();
@@ -394,17 +371,17 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
       dateOfBirth: '14/06/1993',
       gender: 'Male',
       phone: stkPushPhone.trim() || phone.trim(),
-      email: email.trim(),
+      email: '',
       address: address.trim(),
       city: city.trim(),
       county: county.trim(),
       postalCode: postalCode.trim(),
       employmentType,
-      employerName: employerName.trim(),
-      jobTitle: jobTitle.trim(),
+      employerName: '',
+      jobTitle: '',
       monthlyIncome: Number(monthlyIncome) || 0,
       monthlyExpenses: Number(monthlyExpenses) || 0,
-      nextPayDate,
+      nextPayDate: '',
       payoutMethod,
       mpesaNumber: stkPushPhone.trim() || mpesaNumber.trim() || phone.trim(),
       bankName: selectedBankObj.name,
@@ -747,31 +724,6 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
                 )}
               </div>
 
-              {/* Email */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Email Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="e.g. name@example.co.ke"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    clearFieldError('email');
-                  }}
-                  className={`w-full px-3.5 py-2 text-sm border rounded-xl focus:ring-2 focus:outline-none ${
-                    fieldErrors.email
-                      ? 'border-red-500 focus:ring-red-500 bg-red-50/20'
-                      : 'border-slate-300 focus:ring-orange-500'
-                  }`}
-                />
-                {fieldErrors.email && (
-                  <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.email}</p>
-                )}
-              </div>
-
               {/* Residential Location */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-3">
@@ -883,55 +835,6 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Employer / Business Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Safaricom / KCB / Business"
-                    value={employerName}
-                    onChange={(e) => {
-                      setEmployerName(e.target.value);
-                      clearFieldError('employerName');
-                    }}
-                    className={`w-full px-3.5 py-2 text-sm border rounded-xl focus:ring-2 focus:outline-none ${
-                      fieldErrors.employerName
-                        ? 'border-red-500 focus:ring-red-500 bg-red-50/20'
-                        : 'border-slate-300 focus:ring-orange-500'
-                    }`}
-                  />
-                  {fieldErrors.employerName && (
-                    <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.employerName}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Job Title / Role <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Operations Officer"
-                    value={jobTitle}
-                    onChange={(e) => {
-                      setJobTitle(e.target.value);
-                      clearFieldError('jobTitle');
-                    }}
-                    className={`w-full px-3.5 py-2 text-sm border rounded-xl focus:ring-2 focus:outline-none ${
-                      fieldErrors.jobTitle
-                        ? 'border-red-500 focus:ring-red-500 bg-red-50/20'
-                        : 'border-slate-300 focus:ring-orange-500'
-                    }`}
-                  />
-                  {fieldErrors.jobTitle && (
-                    <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.jobTitle}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Monthly Net Income (KSh) <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -983,29 +886,6 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
                     <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.monthlyExpenses}</p>
                   )}
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Next Salary / Revenue Date <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={nextPayDate}
-                  onChange={(e) => {
-                    setNextPayDate(e.target.value);
-                    clearFieldError('nextPayDate');
-                  }}
-                  className={`w-full px-3.5 py-2 text-sm border rounded-xl focus:ring-2 focus:outline-none ${
-                    fieldErrors.nextPayDate
-                      ? 'border-red-500 focus:ring-red-500 bg-red-50/20'
-                      : 'border-slate-300 focus:ring-orange-500'
-                  }`}
-                />
-                {fieldErrors.nextPayDate && (
-                  <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.nextPayDate}</p>
-                )}
               </div>
             </div>
           )}

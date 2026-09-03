@@ -51,8 +51,8 @@ export const Hero: React.FC<HeroProps> = ({
                   <Zap className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900">Instant M-PESA Payout</h4>
-                  <p className="text-xs text-slate-500">Funds hit your wallet in under 2 mins</p>
+                  <h4 className="text-sm font-bold text-slate-900">Instant M-PESA Payout After Approval</h4>
+                  <p className="text-xs text-slate-500">Funds hit your M-PESA after review of qualification</p>
                 </div>
               </div>
 
@@ -61,8 +61,8 @@ export const Hero: React.FC<HeroProps> = ({
                   <Banknote className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900">CBK Regulated Rates</h4>
-                  <p className="text-xs text-slate-500">Transparent pricing with zero hidden costs</p>
+                  <h4 className="text-sm font-bold text-slate-900">CBK Compliant Rates</h4>
+                  <p className="text-xs text-slate-500">Get fair CBK-compliant rates and funds credited directly to your M-PESA after approval</p>
                 </div>
               </div>
 
