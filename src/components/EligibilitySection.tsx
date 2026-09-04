@@ -101,13 +101,13 @@ export const EligibilitySection: React.FC<EligibilitySectionProps> = ({ onStartA
             ))}
           </div>
 
-          {/* Right: Interactive Instant Eligibility Checker */}
+          {/* Right: Interactive Eligibility Checker */}
           <div className="lg:col-span-6 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xl space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
                 <h3 className="text-lg font-bold text-slate-900 font-['Outfit'] flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-orange-600" />
-                  Instant Kenya Eligibility Pre-Checker
+                  Kenya Eligibility Pre-Checker
                 </h3>
                 <p className="text-xs text-slate-500">Test your qualification before applying</p>
               </div>
@@ -238,11 +238,11 @@ export const EligibilitySection: React.FC<EligibilitySectionProps> = ({ onStartA
                 )}
                 <div>
                   <h4 className="text-sm font-bold">
-                    {isEligible ? 'Great News! You Qualify for a LendPlus Kenya M-PESA Loan' : 'Eligibility Notice'}
+                    {isEligible ? 'You May Qualify for a LendPlus Kenya M-PESA Loan' : 'Eligibility Notice'}
                   </h4>
                   <p className="text-xs mt-1 text-slate-600 leading-relaxed">
                     {isEligible
-                      ? 'Based on your profile, you meet Central Bank of Kenya (CBK) digital credit requirements and can apply for up to KSh 100,000 disbursed directly to your M-PESA in minutes.'
+                      ? 'Based on your profile, you may meet the general criteria to apply. Final approval is subject to CBK digital credit requirements, credit assessment, and verification.'
                       : 'To qualify under CBK DCP guidelines, applicants must be 18-65, hold a valid Kenyan ID, and have a monthly income of at least KSh 15,000.'}
                   </p>
                 </div>
@@ -255,7 +255,7 @@ export const EligibilitySection: React.FC<EligibilitySectionProps> = ({ onStartA
                 onClick={onStartApply}
                 className="w-full py-3.5 bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-bold text-sm rounded-xl shadow-md shadow-orange-600/25 flex items-center justify-center gap-2 transition-all"
               >
-                <span>Proceed to 3-Minute M-PESA Application</span>
+                <span>Start Online M-PESA Application</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             )}

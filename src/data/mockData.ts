@@ -141,31 +141,31 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: 'faq_2',
     category: 'Application',
     question: 'How much money can I borrow and how is it disbursed?',
-    answer: 'First-time borrowers can apply for between KSh 1,000 and KSh 30,000 with flexible terms of 61 to 90 days. Funds are disbursed instantly directly to your registered Safaricom M-PESA or Airtel Money wallet within 3 minutes of automated approval. Timely repayments unlock VIP limits up to KSh 50,000 with lower interest rates.'
+    answer: 'First-time borrowers can apply for between KSh 1,000 and KSh 30,000 with terms of 61 to 90 days. Timely repayments may unlock higher limits up to KSh 50,000. Approved loan amounts are disbursed to your registered Safaricom M-PESA or Airtel Money wallet. Processing times may vary and disbursement is not guaranteed within a specific timeframe.'
   },
   {
     id: 'faq_3',
     category: 'Application',
     question: 'What are the minimum eligibility criteria to qualify for a loan in Kenya?',
-    answer: 'To qualify for a LendPlus Kenya loan: 1) You must be a Kenyan citizen aged 20 to 60 years; 2) Possess a valid Kenyan National ID Card (7-8 digits); 3) Have an active Safaricom M-PESA or Airtel Money registered in your legal name for at least 6 months; 4) Have a regular monthly source of income or business earnings.'
+    answer: 'To qualify for a LendPlus Kenya loan: 1) You must be a Kenyan citizen aged 18 to 65 years; 2) Possess a valid Kenyan National ID Card (7-8 digits); 3) Have an active Safaricom M-PESA or Airtel Money registered in your legal name; 4) Have a regular monthly source of income or business earnings of at least KSh 15,000. Final approval is subject to credit assessment.'
   },
   {
     id: 'faq_4',
     category: 'Fees & Rates',
     question: 'How are interest rates and processing fees calculated under CBK guidelines?',
-    answer: 'Our rates are fully transparent with zero hidden fees. Interest is 3.5% per month (42% p.a.) for first-time applicants, and 2.5% per month (30% p.a.) for returning VIP borrowers. Processing and facilitation fee is 7% - 9% (inclusive of 20% Kenya Excise Duty as per the Finance Act), and monthly account technology maintenance is KSh 150/month.'
+    answer: 'Our rates are fully transparent with no hidden fees. Interest is 3.5% per month (42% p.a.) for first-time applicants, and 2.5% per month (30% p.a.) for returning VIP borrowers. Processing and facilitation fee is 7% - 9% (inclusive of 20% Kenya Excise Duty as per the Finance Act), and monthly account technology maintenance is KSh 150/month.'
   },
   {
     id: 'faq_5',
     category: 'Application',
-    question: 'How fast will I receive my money on M-PESA?',
-    answer: 'Our proprietary algorithmic scoring model performs instant real-time KYC and credit risk assessment. Once you accept your loan quote, funds hit your M-PESA phone number in under 2 minutes (24/7, including weekends and public holidays).'
+    question: 'How long does it take to receive money on M-PESA after approval?',
+    answer: 'Once your loan is approved and the statutory application fee is confirmed via M-PESA STK Push, your loan amount is disbursed to your registered M-PESA number. Processing times may vary based on verification and disbursement cycles.'
   },
   {
     id: 'faq_6',
     category: 'Repayment',
     question: 'How do I repay my loan via M-PESA Paybill or STK Push?',
-    answer: 'You can repay anytime via: 1) Instant M-PESA STK Push directly from your LendPlus dashboard (you enter your phone and PIN prompt appears automatically); 2) M-PESA Paybill: Go to Lipa na M-PESA > Paybill > Enter Business No. 4085435 > Account No: Your National ID or Loan Number; 3) Pesalink / Direct Bank Transfer.'
+    answer: 'You can repay via: 1) M-PESA STK Push directly from your LendPlus dashboard (a prompt is sent to your registered phone and you enter your M-PESA PIN); 2) M-PESA Paybill: Go to Lipa na M-PESA > Paybill > Enter Business No. 4085435 > Account No: Your National ID or Loan Number; 3) Pesalink / Direct Bank Transfer.'
   },
   {
     id: 'faq_7',

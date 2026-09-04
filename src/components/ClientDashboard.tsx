@@ -223,7 +223,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                       className="w-full sm:w-auto flex-1 py-3.5 px-6 bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-bold text-sm rounded-xl shadow-md shadow-orange-600/20 flex items-center justify-center gap-2 transition-colors"
                     >
                       <Smartphone className="w-4 h-4" />
-                      <span>Instant M-PESA STK Repayment</span>
+                      <span>M-PESA STK Repayment</span>
                     </button>
 
                     <button

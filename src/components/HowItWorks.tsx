@@ -17,28 +17,28 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ onStartApply }) => {
     {
       number: '01',
       title: 'Select Loan & Term',
-      desc: 'Use our real-time loan calculator to choose your cash amount (KSh 3,000 to KSh 100,000) and review the exact M-PESA application fee and transparent installment breakdowns.',
+      desc: 'Use our loan calculator to choose your cash amount (KSh 3,000 to KSh 100,000) and review the application fee and transparent installment breakdown.',
       icon: <Sliders className="w-6 h-6 text-orange-600" />,
       badge: 'Step 1'
     },
     {
       number: '02',
-      title: 'Complete 3-Min Form',
-      desc: 'Provide your Kenyan National ID and registered Safaricom M-PESA number. Zero paperwork, no guarantor visits, and no OTP delays.',
+      title: 'Complete the Online Form',
+      desc: 'Provide your Kenyan National ID and registered Safaricom M-PESA number. No guarantor visits required.',
       icon: <FileText className="w-6 h-6 text-orange-600" />,
       badge: 'Step 2'
     },
     {
       number: '03',
-      title: 'Instant Credit Decision',
-      desc: 'Our automated scoring engine verifies your application in under 60 seconds. Review your CBK-mandated pre-agreement contract terms and electronically sign in one tap.',
+      title: 'Application Review',
+      desc: 'Our scoring engine reviews your application in line with CBK responsible lending rules. Review your pre-agreement contract terms and electronically sign.',
       icon: <CheckCircle className="w-6 h-6 text-orange-600" />,
       badge: 'Step 3'
     },
     {
       number: '04',
-      title: 'STK Fee & Instant Payout',
-      desc: 'Initiate the M-PESA STK Push to pay the statutory application fee. Your approved loan is immediately credited and transferred to your M-PESA wallet in under 2 minutes.',
+      title: 'STK Fee & Loan Disbursement',
+      desc: 'Once approved, initiate the M-PESA STK Push to pay the statutory application fee. Your approved loan amount is then disbursed to your M-PESA wallet.',
       icon: <Smartphone className="w-6 h-6 text-orange-600" />,
       badge: 'Step 4'
     },
@@ -57,7 +57,7 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ onStartApply }) => {
             How LendPlus Works in Kenya
           </h2>
           <p className="text-slate-600 mt-3 text-base sm:text-lg">
-            We've redesigned personal digital lending in Kenya to be instant, 100% paperless, and fully transparent with direct M-PESA payouts.
+            We've redesigned personal digital lending in Kenya to be a simple, paperless, and transparent online application with direct M-PESA payouts upon approval.
           </p>
         </div>
 
@@ -98,8 +98,8 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ onStartApply }) => {
           <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-orange-500/20 rounded-full blur-3xl pointer-events-none" />
           
           <div className="space-y-1 text-center sm:text-left z-10">
-            <h4 className="text-xl font-bold font-['Outfit']">Ready to receive cash to your M-PESA today?</h4>
-            <p className="text-sm text-slate-300">Average approval and disbursement takes under 5 minutes 24/7.</p>
+            <h4 className="text-xl font-bold font-['Outfit']">Ready to apply for a loan to your M-PESA?</h4>
+            <p className="text-sm text-slate-300">Applications are reviewed promptly. Our team operates 24/7.</p>
           </div>
           <button
             onClick={onStartApply}

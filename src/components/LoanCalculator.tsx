@@ -42,7 +42,7 @@ export const LoanCalculator: React.FC<LoanCalculatorProps> = ({
           </div>
           <div>
             <h3 className="font-bold text-slate-900 text-lg font-['Outfit']">LendPlus Kenya Loan Calculator</h3>
-            <p className="text-xs text-slate-500">CBK Licensed • Instant Safaricom M-PESA Payout</p>
+            <p className="text-xs text-slate-500">CBK Licensed • M-PESA Disbursement</p>
           </div>
         </div>
 
@@ -165,7 +165,7 @@ export const LoanCalculator: React.FC<LoanCalculatorProps> = ({
               <span className="text-[11px] uppercase tracking-wider text-orange-300 font-bold block">
                 M-PESA Application Fee (STK Push):
               </span>
-              <span className="text-[11px] text-slate-300">Paid to trigger instant loan crediting</span>
+              <span className="text-[11px] text-slate-300">Settled via M-PESA STK Push on application</span>
             </div>
             <span className="text-2xl font-black text-amber-300 font-['Outfit']">KSh {appFee}</span>
           </div>
@@ -255,10 +255,10 @@ export const LoanCalculator: React.FC<LoanCalculatorProps> = ({
 
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-slate-500 font-medium pt-1">
             <span className="inline-flex items-center gap-1 text-slate-600">
-              <CheckCircle2 className="w-3.5 h-3.5 text-orange-500" /> 100% Online M-PESA
+              <CheckCircle2 className="w-3.5 h-3.5 text-orange-500" /> Online M-PESA Application
             </span>
             <span className="inline-flex items-center gap-1 text-slate-600">
-              <CheckCircle2 className="w-3.5 h-3.5 text-orange-500" /> Instant STK Payout
+              <CheckCircle2 className="w-3.5 h-3.5 text-orange-500" /> M-PESA STK Payout
             </span>
             <span className="inline-flex items-center gap-1 text-slate-600">
               <ShieldCheck className="w-3.5 h-3.5 text-orange-500" /> CBK Licensed

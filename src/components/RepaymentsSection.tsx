@@ -9,6 +9,7 @@ import {
   Lock,
   PhoneCall
 } from 'lucide-react';
+import { ComplianceDisclaimer } from './ComplianceDisclaimer';
 
 interface RepaymentsSectionProps {
   onOpenOzowDemo: () => void;
@@ -22,13 +23,13 @@ export const RepaymentsSection: React.FC<RepaymentsSectionProps> = ({ onOpenOzow
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-14">
           <span className="text-xs font-bold uppercase tracking-wider text-orange-800 bg-orange-100 px-3 py-1 rounded-full border border-orange-200">
-            100% M-PESA Express
+            Convenient M-PESA Repayments
           </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-3 font-['Outfit']">
-            Instant M-PESA STK Push Repayments
+            M-PESA STK Push Repayments
           </h2>
           <p className="text-slate-600 mt-3 text-base sm:text-lg">
-            No manual paybill typing, no errors, no delays. Repay anytime in 3 seconds directly via Safaricom M-PESA Express (STK Push) prompt sent straight to your phone.
+            Apply online in minutes with a fast review process. After approval, use our quick M-PESA STK Push prompt to settle your loan amount directly from your phone at any time.
           </p>
         </div>
 
@@ -40,7 +41,7 @@ export const RepaymentsSection: React.FC<RepaymentsSectionProps> = ({ onOpenOzow
             <div className="lg:col-span-7 p-6 sm:p-10 space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-extrabold uppercase tracking-wide">
                 <Zap className="w-3.5 h-3.5 fill-orange-600 text-orange-600" />
-                <span>Exclusive Fast Repayment Method</span>
+                <span>Fast Repayment Method</span>
               </div>
 
               <div>
@@ -60,7 +61,7 @@ export const RepaymentsSection: React.FC<RepaymentsSectionProps> = ({ onOpenOzow
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-slate-900">One-Tap Trigger from Dashboard</h4>
-                    <p className="text-xs text-slate-500 mt-0.5">Click "Instant M-PESA STK Repayment" and confirm the amount.</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Click "M-PESA STK Repayment" from your dashboard and confirm the amount.</p>
                   </div>
                 </div>
 
@@ -79,8 +80,8 @@ export const RepaymentsSection: React.FC<RepaymentsSectionProps> = ({ onOpenOzow
                     3
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900">Instant Ledger Reconciliation</h4>
-                    <p className="text-xs text-slate-500 mt-0.5">Your loan balance updates instantly, generating your M-PESA SMS receipt in real-time.</p>
+                    <h4 className="text-sm font-bold text-slate-900">Quick Ledger Reconciliation</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">Your loan balance updates once payment is confirmed, and an M-PESA SMS receipt is generated.</p>
                   </div>
                 </div>
               </div>
@@ -91,9 +92,13 @@ export const RepaymentsSection: React.FC<RepaymentsSectionProps> = ({ onOpenOzow
                   className="w-full sm:w-auto px-8 py-4 bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-bold text-sm rounded-xl shadow-lg shadow-orange-600/30 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
                 >
                   <Smartphone className="w-4 h-4" />
-                  <span>Test M-PESA Express STK Push</span>
+                  <span>Try M-PESA Express STK Push</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
+              </div>
+
+              <div className="pt-2">
+                <ComplianceDisclaimer variant="inline" />
               </div>
             </div>
 
@@ -149,9 +154,9 @@ export const RepaymentsSection: React.FC<RepaymentsSectionProps> = ({ onOpenOzow
             <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold">
               <Zap className="w-5 h-5" />
             </div>
-            <h4 className="text-base font-bold text-slate-900 font-['Outfit']">Instant 3-Second Update</h4>
+            <h4 className="text-base font-bold text-slate-900 font-['Outfit']">Prompt Update on Payment</h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              No manual waiting for bank clearance. Payments update your loan ledger and unlock higher borrowing limits immediately.
+              No manual waiting for bank clearance. Once payment is received, your loan ledger is updated promptly.
             </p>
           </div>
 
@@ -159,7 +164,7 @@ export const RepaymentsSection: React.FC<RepaymentsSectionProps> = ({ onOpenOzow
             <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold">
               <ShieldCheck className="w-5 h-5" />
             </div>
-            <h4 className="text-base font-bold text-slate-900 font-['Outfit']">Zero Fraud Risk</h4>
+            <h4 className="text-base font-bold text-slate-900 font-['Outfit']">Low Fraud Risk</h4>
             <p className="text-xs text-slate-600 leading-relaxed">
               You never enter your PIN into a website or third party. PIN entry happens strictly in Safaricom's native hardware SIM environment.
             </p>
@@ -171,7 +176,7 @@ export const RepaymentsSection: React.FC<RepaymentsSectionProps> = ({ onOpenOzow
             </div>
             <h4 className="text-base font-bold text-slate-900 font-['Outfit']">Zero Early Settlement Penalty</h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Pay off your balance partially or in full anytime with zero penalty fees, reducing future monthly service costs.
+              Pay off your balance partially or in full anytime with zero penalty fees, subject to your loan terms.
             </p>
           </div>
         </div>

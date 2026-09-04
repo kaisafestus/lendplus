@@ -124,9 +124,35 @@ export const RatesAndFees: React.FC = () => {
           <div className="p-4 bg-orange-50/30 text-xs text-slate-500 border-t border-orange-100 flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-orange-600 shrink-0 mt-0.5" />
             <p>
-              * When your loan application is completed and verified, an M-PESA STK Push prompt is triggered to your registered phone to settle the corresponding statutory application fee. Upon confirmation, your loan principal is credited immediately to your M-PESA balance.
+              * Once your application is reviewed and approved, an M-PESA STK Push prompt is sent to your registered phone to settle the statutory application fee. After payment confirmation, your loan principal is disbursed to your M-PESA balance. Disbursement is subject to verification and regulatory compliance.
             </p>
           </div>
+        </div>
+
+        {/* Loan Terms Summary */}
+        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+            <h4 className="font-bold text-slate-900 mb-2 text-sm">Loan Amount &amp; Repayment Period</h4>
+            <ul className="text-xs text-slate-600 space-y-1">
+              <li>• Loan amount: KSh 500 to KSh 50,000 (subject to credit assessment)</li>
+              <li>• Repayment period: 30 to 180 days</li>
+              <li>• Monthly installment structure for terms up to 6 months</li>
+            </ul>
+          </div>
+          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+            <h4 className="font-bold text-slate-900 mb-2 text-sm">Late Payment &amp; Renewal Policies</h4>
+            <ul className="text-xs text-slate-600 space-y-1">
+              <li>• Late repayments attract charges as set out in your loan agreement</li>
+              <li>• Defaults may be reported to licensed Credit Reference Bureaus</li>
+              <li>• Loan renewal is subject to repayment history and re-qualification</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <p className="text-[11px] text-slate-500 leading-relaxed">
+            <strong>Compliance statement:</strong> All loan applications are subject to verification, eligibility checks, credit assessment, and final approval. Loan approval is not guaranteed. Processing times may vary. Terms and conditions apply.
+          </p>
         </div>
 
       </div>

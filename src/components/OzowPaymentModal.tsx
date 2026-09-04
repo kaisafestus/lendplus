@@ -190,7 +190,7 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
 
             <div className="p-3 bg-orange-50 rounded-2xl border border-orange-200 flex items-center gap-2.5 text-xs text-orange-950 font-semibold">
               <Zap className="w-4 h-4 text-orange-600 shrink-0 fill-orange-600" />
-              <span>Instant STK Push: An M-PESA PIN prompt will pop up on your phone.</span>
+              <span>M-PESA STK Push: A PIN prompt will pop up on your phone.</span>
             </div>
 
             {/* Repayment Amount */}
@@ -239,7 +239,7 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
                     className="w-full pl-9 pr-4 py-2.5 text-sm font-mono border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:outline-none"
                   />
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">An instant PIN prompt will appear on this phone.</p>
+                <p className="text-[11px] text-slate-400 mt-1">A PIN prompt will appear on this phone after the STK push is initiated.</p>
               </div>
 
               <button
@@ -263,7 +263,7 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
 
             <div className="pt-2 flex items-center justify-center gap-1.5 text-xs text-slate-500">
               <ShieldCheck className="w-4 h-4 text-orange-600" />
-              <span>Upesi Pay Gateway • Instant ledger reconciliation</span>
+              <span>Upesi Pay Gateway • Prompt ledger reconciliation</span>
             </div>
           </div>
         )}
@@ -312,7 +312,7 @@ export const OzowPaymentModal: React.FC<OzowPaymentModalProps> = ({
                 {formatKES(payAmount)} Received
               </h4>
               <p className="text-xs text-slate-500 mt-1">
-                Your loan balance has been credited instantly.
+                Your loan balance has been updated.
               </p>
             </div>
 

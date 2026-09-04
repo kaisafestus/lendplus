@@ -15,6 +15,8 @@ import { OzowPaymentModal } from './components/OzowPaymentModal';
 import { AuthModal } from './components/AuthModal';
 import { AuthPromptModal } from './components/AuthPromptModal';
 import { MobileAppSimulator } from './components/MobileAppSimulator';
+import { ComplianceDisclaimer } from './components/ComplianceDisclaimer';
+import { LegalPages } from './components/LegalPages';
 import { INITIAL_DEMO_LOANS } from './data/mockData';
 import { UserProfile, LoanRecord } from './types';
 
@@ -35,6 +37,7 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isAuthPromptOpen, setIsAuthPromptOpen] = useState<boolean>(false);
   const [pendingAuthAction, setPendingAuthAction] = useState<(() => void) | null>(null);
+  const [legalPage, setLegalPage] = useState<'privacy' | 'terms' | 'eligibility' | 'rates' | null>(null);
 
   // M-PESA / Repayment Modal state
   const [isOzowModalOpen, setIsOzowModalOpen] = useState<boolean>(false);
@@ -227,6 +230,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+      {/* Site-wide Compliance Disclaimer Banner */}
+      <ComplianceDisclaimer variant="banner" />
+
       {/* Navigation Header */}
       <Navbar
         currentTab={currentTab}
@@ -294,6 +300,7 @@ export default function App() {
       <Footer
         onSelectTab={handleTabChange}
         onOpenApply={() => wrappedStartApply(10000, 6, false)}
+        onOpenLegal={(page) => setLegalPage(page)}
       />
 
       {/* Application Wizard Modal */}
@@ -338,6 +345,12 @@ export default function App() {
         activeLoan={userActiveLoan}
         onStartApply={wrappedStartApply}
         onOpenOzow={wrappedOpenOzow}
+      />
+
+      {/* Legal Pages Modal */}
+      <LegalPages
+        open={legalPage}
+        onClose={() => setLegalPage(null)}
       />
     </div>
   );

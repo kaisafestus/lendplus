@@ -8,6 +8,7 @@ import {
   Send
 } from 'lucide-react';
 import { LoanCalculator } from './LoanCalculator';
+import { ComplianceDisclaimer } from './ComplianceDisclaimer';
 
 interface HeroProps {
   onStartApplication: (amount: number, termDays: number, isReturning: boolean) => void;
@@ -36,12 +37,11 @@ export const Hero: React.FC<HeroProps> = ({
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight font-['Outfit'] leading-[1.1]">
-              Instant Mobile Cash Loans in <span className="text-orange-600 underline decoration-orange-300 underline-offset-4">Kenya</span>
+              Fast and Convenient Online Loan Applications in <span className="text-orange-600 underline decoration-orange-300 underline-offset-4">Kenya</span>
             </h1>
 
             <p className="text-lg text-slate-600 max-w-2xl leading-relaxed">
-              Borrow from <strong className="text-slate-900">KSh 3,000 up to KSh 100,000</strong> within 3 minutes. 
-              Get instant automated approval, fair CBK-compliant rates, and funds credited directly to your <strong className="text-orange-700">M-PESA</strong>.
+              Apply online in minutes. Applications are reviewed based on eligibility and lending criteria. Approved loans are disbursed promptly to your <strong className="text-orange-700">M-PESA</strong>.
             </p>
 
             {/* Core Feature Bullet Grid */}
@@ -51,7 +51,7 @@ export const Hero: React.FC<HeroProps> = ({
                   <Zap className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900">Instant M-PESA Payout After Approval</h4>
+                  <h4 className="text-sm font-bold text-slate-900">M-PESA Payout Upon Approval</h4>
                   <p className="text-xs text-slate-500">Funds hit your M-PESA after review of qualification</p>
                 </div>
               </div>
@@ -81,10 +81,15 @@ export const Hero: React.FC<HeroProps> = ({
                   <Smartphone className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900">100% Paperless KYC</h4>
+                  <h4 className="text-sm font-bold text-slate-900">Paperless KYC</h4>
                   <p className="text-xs text-slate-500">National ID & M-PESA statement check</p>
                 </div>
               </div>
+            </div>
+
+            {/* Compliance disclaimer */}
+            <div className="pt-2">
+              <ComplianceDisclaimer variant="inline" />
             </div>
 
             {/* Trust and Rating strip */}

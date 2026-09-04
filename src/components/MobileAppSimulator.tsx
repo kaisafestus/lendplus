@@ -146,7 +146,7 @@ export const MobileAppSimulator: React.FC<MobileAppSimulatorProps> = ({
                   {/* Compact Quick Calculator */}
                   <div className="bg-white p-3.5 rounded-2xl border border-orange-200/80 shadow-xs space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-slate-900 text-xs">Instant Quick Loan</span>
+                      <span className="font-bold text-slate-900 text-xs">Apply for a Loan</span>
                       <span className="text-orange-600 font-bold text-xs font-mono">42% APR</span>
                     </div>
                     <div className="p-2.5 bg-orange-50/40 rounded-xl flex justify-between items-center border border-orange-100">
@@ -162,7 +162,7 @@ export const MobileAppSimulator: React.FC<MobileAppSimulatorProps> = ({
                       className="w-full py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm"
                     >
                       <Zap className="w-3.5 h-3.5 fill-white text-white" />
-                      <span>Apply in 3 Minutes</span>
+                      <span>Apply Online</span>
                     </button>
                   </div>
 

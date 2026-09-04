@@ -545,7 +545,7 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
                 <div className="flex justify-between items-center pb-2 border-b border-slate-800">
                   <div>
                     <span className="text-orange-400 font-bold uppercase text-[11px] block">M-PESA STK Application Fee:</span>
-                    <p className="text-[11px] text-slate-400">Payable via instant STK Push upon approval</p>
+                    <p className="text-[11px] text-slate-400">Payable via M-PESA STK Push upon approval</p>
                   </div>
                   <span className="text-2xl font-black text-amber-400 font-['Outfit']">KSh {appFee}</span>
                 </div>
@@ -588,7 +588,7 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
             <div className="space-y-4">
               <div>
                 <h4 className="text-lg font-bold text-slate-900 font-['Outfit']">Personal & Identity Information</h4>
-                <p className="text-xs text-slate-500">Instant paperless verification. Enter details matching your Kenyan National ID.</p>
+                <p className="text-xs text-slate-500">Paperless verification. Enter details matching your Kenyan National ID.</p>
               </div>
 
               <div className="grid grid-cols-4 gap-3">
@@ -719,7 +719,7 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
                   <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.phone}</p>
                 ) : (
                   <p className="text-[11px] text-slate-500 mt-1">
-                    The STK Push prompt for your KSh {appFee} fee and instant loan credit will be sent to this number.
+                    The STK Push prompt for your KSh {appFee} fee and approved loan credit will be sent to this number.
                   </p>
                 )}
               </div>
@@ -905,7 +905,7 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
                     <span className="text-sm font-bold text-slate-900">Safaricom M-PESA Express Direct</span>
                   </div>
                   <span className="text-xs font-bold text-orange-700 bg-orange-100 px-2.5 py-1 rounded-full">
-                    Instant (Under 2 Mins)
+                    M-PESA B2C (Upon Approval)
                   </span>
                 </div>
 
@@ -933,7 +933,7 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
                   )}
                 </div>
                 <p className="text-[11px] text-slate-600">
-                  Ensure this phone number matches your registered Safaricom SIM for instant STK Push and B2C disbursement.
+                    Ensure this phone number matches your registered Safaricom SIM for the STK Push and B2C disbursement.
                 </p>
               </div>
             </div>
@@ -1090,7 +1090,7 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
                       Initiate M-PESA STK Push
                     </h4>
                     <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-md mx-auto">
-                      To complete your application and receive your <strong className="text-slate-900">{formatKES(amount)}</strong> loan directly on M-PESA, please initiate the STK Push to pay the statutory application fee of <strong className="text-orange-700">KSh {appFee}</strong>.
+                      To complete your application and receive your approved loan of <strong className="text-slate-900">{formatKES(amount)}</strong> directly to M-PESA, please initiate the STK Push to pay the statutory application fee of <strong className="text-orange-700">KSh {appFee}</strong>. Disbursement is subject to final verification and compliance.
                     </p>
                   </div>
 
@@ -1114,7 +1114,7 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
                     </div>
                     <div className="flex justify-between pt-1 border-t border-slate-200">
                       <span className="text-slate-500">Payout Destination:</span>
-                      <span className="font-bold text-orange-700">M-PESA B2C (Instant)</span>
+                      <span className="font-bold text-orange-700">M-PESA B2C (Upon Approval)</span>
                     </div>
                   </div>
 
@@ -1144,6 +1144,10 @@ export const LoanApplicationModal: React.FC<LoanApplicationModalProps> = ({
                       <ArrowRight className="w-5 h-5" />
                     </button>
                   </div>
+
+                  <p className="text-[10px] text-slate-500 leading-relaxed max-w-md mx-auto">
+                    Loan approval is subject to eligibility verification, credit assessment, and compliance checks. Processing times may vary. Terms and conditions apply.
+                  </p>
                 </div>
               )}
 

@@ -58,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="font-extrabold text-xl tracking-tight text-slate-900 font-['Outfit']">LEND<span className="text-orange-600">PLUS</span></span>
                   <span className="text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded">KE</span>
                 </div>
-                <p className="text-[10px] text-slate-500 font-medium">Instant M-PESA Digital Loans</p>
+                <p className="text-[10px] text-slate-500 font-medium">M-PESA Digital Loans</p>
               </div>
             </button>
 
